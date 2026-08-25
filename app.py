@@ -247,18 +247,32 @@ elif st.session_state.page == "new_client":
         st.markdown('<div class="step-box"><b>Step 2:</b> Upload the client documents for AI extraction.</div>',
                     unsafe_allow_html=True)
 
+        st.markdown("#### Required Documents")
         st.markdown("""
-        Upload the following documents **(PDF or DOCX)**:
         - 📄 **Parent company registration certificate** (SECP/CTRN)
         - 🪪 **AO / employee passport** (scan)
         - 📋 **AO / employee CV or résumé**
         """)
 
         uploaded = st.file_uploader(
-            "Select files (hold Ctrl to select multiple)",
+            "Select required files (hold Ctrl to select multiple)",
             type=["pdf", "docx", "doc", "png", "jpg", "jpeg"],
             accept_multiple_files=True,
             key="doc_upload",
+        )
+
+        st.divider()
+        st.markdown("#### Optional — Recommended for Better Drafts")
+        st.markdown("""
+        - 🏢 **Business Profile** — used to extract job description and duties for C.1 Employment Letter
+        - 📊 **Hierarchy / Organisational Chart** — used to confirm reporting structure and job title
+        """)
+
+        uploaded_optional = st.file_uploader(
+            "Select optional files (Business Profile, Org Chart)",
+            type=["pdf", "docx", "doc", "png", "jpg", "jpeg"],
+            accept_multiple_files=True,
+            key="optional_upload",
         )
 
         col1, col2 = st.columns([1, 1])
@@ -271,9 +285,15 @@ elif st.session_state.page == "new_client":
                          disabled=not uploaded or not groq_ok):
                 doc_texts = {}
                 with st.spinner("Reading documents..."):
-                    for uf in uploaded:
+                    for uf in (uploaded or []):
                         try:
                             doc_texts[uf.name] = document_reader.read_uploaded(
+                                uf.read(), uf.name)
+                        except Exception as e:
+                            st.warning(f"Could not read {uf.name}: {e}")
+                    for uf in (uploaded_optional or []):
+                        try:
+                            doc_texts[f"[OPTIONAL] {uf.name}"] = document_reader.read_uploaded(
                                 uf.read(), uf.name)
                         except Exception as e:
                             st.warning(f"Could not read {uf.name}: {e}")
@@ -342,6 +362,31 @@ elif st.session_state.page == "new_client":
         with c1: fields["ao_soc_code"]          = st.text_input("SOC Code", fields.get("ao_soc_code","1111"))
         with c2: fields["ao_going_rate"]         = st.text_input("Going Rate (Annual)", fields.get("ao_going_rate","£60,000"))
         with c3: fields["ao_going_rate_hourly"]  = st.text_input("Going Rate (Hourly)", fields.get("ao_going_rate_hourly","£30.77 per hour"))
+
+        st.divider()
+        st.markdown("#### 💼 Job Description *(from Business Profile / CV)*")
+
+        c1, c2 = st.columns(2)
+        with c1:
+            fields["reporting_to"] = st.text_input("Reports To", fields.get("reporting_to",""))
+            fields["department"]   = st.text_input("Department / Division", fields.get("department",""))
+        with c2:
+            pass
+
+        fields["job_description"] = st.text_area(
+            "Job Description (paragraph)",
+            fields.get("job_description",""),
+            height=100,
+            help="Extracted from Business Profile. Edit if needed.",
+        )
+
+        duties_raw = st.text_area(
+            "Key Duties / Responsibilities (one per line)",
+            "\n".join(fields.get("job_duties", [])),
+            height=120,
+            help="Extracted from Business Profile or CV. Edit if needed.",
+        )
+        fields["job_duties"] = [d.strip() for d in duties_raw.split("\n") if d.strip()]
 
         st.divider()
         st.markdown("#### ✏️ Manual Entries")

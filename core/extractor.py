@@ -21,7 +21,11 @@ You are a document analysis assistant. Extract the following from the document t
   "ao_soc_code": "",
   "ao_going_rate": "",
   "ao_going_rate_hourly": "",
-  "application_date": ""
+  "application_date": "",
+  "job_description": "",
+  "job_duties": [],
+  "reporting_to": "",
+  "department": ""
 }
 
 Rules:
@@ -34,7 +38,12 @@ Rules:
 - ao_soc_code: SOC 2020 code (default "1111" if unclear)
 - ao_going_rate: annual salary e.g. "£60,000"
 - ao_going_rate_hourly: e.g. "£30.77 per hour"
-- Return "" for any field not found
+- job_description: a one paragraph summary of the role purpose and responsibilities (extract from Business Profile or CV if present)
+- job_duties: list of key duties/responsibilities as bullet points (extract from Business Profile or Job Description section in any document)
+- reporting_to: who the employee reports to (from org chart or CV)
+- department: department or division name (from business profile or org chart)
+- Files prefixed [OPTIONAL] are supplementary — prioritise them for job_description, job_duties, reporting_to, department
+- Return "" or [] for any field not found
 """
 
 STAFF_PROMPT = """
@@ -78,7 +87,7 @@ def _client() -> Groq:
 def extract(doc_texts: dict) -> dict:
     combined = "\n\n".join(f"=== {k} ===\n{v[:4000]}" for k, v in doc_texts.items())
     resp = _client().chat.completions.create(
-        model="llama-3.3-70b-specdec",
+        model="qwen/qwen3.6-27b",
         messages=[
             {"role": "system", "content": EXTRACTION_PROMPT},
             {"role": "user", "content": combined[:12000]},
@@ -90,7 +99,7 @@ def extract(doc_texts: dict) -> dict:
 def extract_remote_staff(doc_texts: dict) -> dict:
     combined = "\n\n".join(f"=== {k} ===\n{v[:5000]}" for k, v in doc_texts.items())
     resp = _client().chat.completions.create(
-        model="llama-3.3-70b-specdec",
+        model="qwen/qwen3.6-27b",
         messages=[
             {"role": "system", "content": STAFF_PROMPT},
             {"role": "user", "content": combined[:14000]},
