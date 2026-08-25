@@ -76,8 +76,9 @@ def generate(fields: dict, uk_fields: dict, output_path):
     parent_ref     = fields.get("parent_ref_no", "")
     parent_date    = fields.get("parent_reg_date", "")
     parent_addr    = fields.get("parent_address", "")
-    parent_website = fields.get("parent_website", "")
-    uk_name        = uk_fields.get("company_name", "")
+    parent_website   = fields.get("parent_website", "")
+    parent_activity  = fields.get("parent_activity", "")
+    uk_name          = uk_fields.get("company_name", "")
     uk_num         = uk_fields.get("company_number", "")
     uk_inc         = uk_fields.get("incorporation_date", "")
     uk_addr        = uk_fields.get("registered_address", "")
@@ -122,7 +123,7 @@ def generate(fields: dict, uk_fields: dict, output_path):
         ("Registered On",               parent_date),
         ("Business Registered Address", parent_addr),
         ("Business Trading Address",    parent_addr),
-        ("Business Principal Activity", ""),
+        ("Business Principal Activity", parent_activity),
         ("Business Website",            parent_website),
     ]
     for label, value in parent_rows:
@@ -142,7 +143,7 @@ def generate(fields: dict, uk_fields: dict, output_path):
     t2.columns[0].width = Cm(7)
     t2.columns[1].width = Cm(9)
 
-    _add_table_row(t2, "UK SUBSIDIARY", "DETAILS", header=True)
+    _add_table_row(t2, "UK SUBSIDAIRY", "DETAILS", header=True)
     uk_rows = [
         ("Business / Company Name",          uk_name),
         ("Company Number",                   uk_num),

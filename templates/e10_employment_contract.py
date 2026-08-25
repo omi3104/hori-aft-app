@@ -39,13 +39,19 @@ def _clause(doc, number, title, body_paras):
     r.font.name = FONT
     r.bold = True
     r.font.size = Pt(11)
-    for b in body_paras:
+    letters = "abcdefghijklmnopqrstuvwxyz"
+    for i, b in enumerate(body_paras):
         bp = doc.add_paragraph()
         bp.paragraph_format.space_after = Pt(4)
         bp.paragraph_format.space_before = Pt(0)
-        r = bp.add_run(b)
-        r.font.name = FONT
-        r.font.size = Pt(11)
+        # Add sub-letter: a), b), c)...
+        label = f"{letters[i]})  " if i < len(letters) else "•  "
+        r_lbl = bp.add_run(label)
+        r_lbl.font.name = FONT
+        r_lbl.font.size = Pt(11)
+        r_txt = bp.add_run(b)
+        r_txt.font.name = FONT
+        r_txt.font.size = Pt(11)
 
 def generate(fields: dict, uk_fields: dict, output_path,
              salary: str = "", start_date: str = ""):
@@ -69,7 +75,8 @@ def generate(fields: dict, uk_fields: dict, output_path,
     soc_code     = fields.get("ao_soc_code", "1111")
     going_rate   = salary or fields.get("ao_going_rate", "£60,000")
     job_duties   = fields.get("job_duties", [])
-    start        = start_date or "[Insert Date]"
+    company_type = fields.get("company_type", "")
+    start        = start_date or "(Insert Date)"
 
     # ── Title ──
     _p(doc, "Employment Agreement", bold=True, size=13, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=10)
@@ -83,10 +90,11 @@ def generate(fields: dict, uk_fields: dict, output_path,
     r2.font.name = FONT; r2.font.size = Pt(11)
     _p(doc)
 
+    co_type_str = f"a {company_type} Company" if company_type else "a Company"
     _p(doc,
        f"Employer: {uk_name}: Registered Office: {uk_addr} "
        f"Company Number: {uk_num} (the \"Employer\" or \"Company\") "
-       f"(Registered Subsidiary of {parent_name}, a Company registered in Pakistan)",
+       f"(Registered Subsidiary of {parent_name}, {co_type_str} registered in Pakistan)",
        bold=True, size=11)
     _p(doc)
     _p(doc, "And", bold=True, size=11, align=WD_ALIGN_PARAGRAPH.CENTER)

@@ -1,5 +1,16 @@
 """companies_house.py — reads CH_API_KEY from environment variable."""
 import os, requests
+from datetime import datetime
+
+def _fmt_date(iso: str) -> str:
+    """Convert '2025-04-14' → '14 April 2025'. Returns original if parse fails."""
+    try:
+        return datetime.strptime(iso, "%Y-%m-%d").strftime("%-d %B %Y")
+    except Exception:
+        try:
+            return datetime.strptime(iso, "%Y-%m-%d").strftime("%d %B %Y").lstrip("0")
+        except Exception:
+            return iso
 
 BASE = "https://api.companieshouse.gov.uk"
 
@@ -34,7 +45,7 @@ def get_company(number: str) -> dict:
         "company_number": num,
         "company_name": data.get("company_name",""),
         "registered_address": addr_str,
-        "incorporation_date": data.get("date_of_creation",""),
+        "incorporation_date": _fmt_date(data.get("date_of_creation","")),
         "sic_codes": data.get("sic_codes",[]),
         "officers": officers,
         "status": data.get("company_status",""),

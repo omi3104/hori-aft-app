@@ -119,7 +119,6 @@ def generate(fields: dict, uk_fields: dict, output_path, doc_date: str = ""):
         "The seniority and important role in the overseas business",
         "The area of operations in the overseas business",
         "The knowledge of relevant industry and services",
-        "The educational background, certifications and communication skills",
         "The proposed operations of the UK entity and relevance of the worker",
     ]
     for c in criteria:

@@ -341,8 +341,26 @@ elif st.session_state.page == "new_client":
         with c2:
             fields["parent_reg_date"] = st.text_input("Registered On (DD Month YYYY)", fields.get("parent_reg_date",""))
             fields["parent_address"]  = st.text_input("Registered Address", fields.get("parent_address",""))
-            fields["parent_website"]  = st.text_input("Company Website", fields.get("parent_website",""),
-                                                       help="Used in A.1 Title Pages table")
+            fields["parent_website"]   = st.text_input("Company Website", fields.get("parent_website",""),
+                                                        help="Used in A.1 Title Pages table")
+
+        c1, c2 = st.columns(2)
+        with c1:
+            fields["parent_activity"] = st.text_input("Business Principal Activity / SIC Code",
+                                                       fields.get("parent_activity",""),
+                                                       placeholder="e.g. 890173 – Other Service Activities",
+                                                       help="Shown in A.1 Parent Company table")
+        with c2:
+            fields["company_type"]    = st.selectbox("Entity Type (for E.12)",
+                                                      ["", "Sole Proprietorship", "Association of Persons",
+                                                       "Private Limited", "Partnership", "Public Limited"],
+                                                      index=["", "Sole Proprietorship", "Association of Persons",
+                                                             "Private Limited", "Partnership", "Public Limited"]
+                                                             .index(fields.get("company_type",""))
+                                                             if fields.get("company_type","") in
+                                                             ["", "Sole Proprietorship", "Association of Persons",
+                                                              "Private Limited", "Partnership", "Public Limited"]
+                                                             else 0)
 
         dirs_raw = st.text_area("Directors / Partners (one per line)",
                                  "\n".join(fields.get("parent_directors", [])), height=80)

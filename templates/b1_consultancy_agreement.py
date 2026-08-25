@@ -106,7 +106,7 @@ def generate(fields: dict, uk_fields: dict, output_path, agreement_date: str = "
     _add_table_row(t1, "Reference No",             parent_ref)
     _add_table_row(t1, "Registered On",            parent_date)
     _add_table_row(t1, "Business Registered Address", parent_addr)
-    _add_table_row(t1, "UK SUBSIDIARY",            "DETAILS",    header=True)
+    _add_table_row(t1, "UK SUBSIDAIRY",             "DETAILS",    header=True)
     _add_table_row(t1, "Business/ Company Name",   uk_name)
     _add_table_row(t1, "Company Number",           uk_num)
     _add_table_row(t1, "Incorporated On",          uk_inc)

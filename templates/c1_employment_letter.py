@@ -70,10 +70,10 @@ def generate(fields: dict, uk_fields: dict, output_path,
     _p(doc, f"Date: {app_date}" if app_date else "Date: ___ / ___ / 20___", size=11)
     _p(doc)
 
-    _p(doc, "To Whom It May Concern", bold=True, size=11)
+    _p(doc, "To Whom It May Concern,", bold=True, size=11)
     _p(doc)
 
-    _p(doc, f"Subject: Employment Confirmation for Mr. {ao_name}", bold=True, size=11)
+    _p(doc, f"Re: Employment Confirmation Letter – Mr. {ao_name}", bold=True, size=11)
     _p(doc)
 
     # Paragraph 1 – confirm employment
@@ -149,16 +149,20 @@ def generate(fields: dict, uk_fields: dict, output_path,
     r.font.size = Pt(11)
 
     _p(doc)
-    _p(doc, "We hereby confirm the authenticity of this employment as per our company records.", size=11)
+    _p(doc,
+       f"This letter is issued at the request of Mr. {ao_name} for official purposes. "
+       f"The contents of this letter are verifiable and may be confirmed by contacting "
+       f"our HR department directly.",
+       size=11)
     _p(doc)
-    _p(doc, "Should you require any further information or verification, please do not hesitate to contact us.", size=11)
+    _p(doc, "Thank You,", size=11)
     _p(doc)
-    _p(doc, "Yours faithfully,", size=11)
     _p(doc)
+    _p(doc, "Signed: ___________________________", size=11)
     _p(doc)
     if signatory:
-        _p(doc, signatory, bold=True, size=11)
-    _p(doc, "Manager Operations", size=11)
+        _p(doc, f"{signatory} – HR & Admin Manager", bold=True, size=11)
+    _p(doc, "For and on behalf of", size=11)
     _p(doc, parent_name, bold=True, size=11)
 
     if output_path is None:
