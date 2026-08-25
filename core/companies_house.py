@@ -1,6 +1,7 @@
 """companies_house.py — reads CH_API_KEY from environment variable."""
 import os, requests
 from datetime import datetime
+from core.sic_lookup import enrich_sic_codes
 
 def _fmt_date(iso: str) -> str:
     """Convert '2025-04-14' → '14 April 2025'. Returns original if parse fails."""
@@ -46,7 +47,7 @@ def get_company(number: str) -> dict:
         "company_name": data.get("company_name",""),
         "registered_address": addr_str,
         "incorporation_date": _fmt_date(data.get("date_of_creation","")),
-        "sic_codes": data.get("sic_codes",[]),
+        "sic_codes": enrich_sic_codes(data.get("sic_codes", [])),
         "officers": officers,
         "status": data.get("company_status",""),
     }

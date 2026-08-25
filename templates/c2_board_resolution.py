@@ -88,16 +88,28 @@ def generate(fields: dict, uk_fields: dict, output_path,
     _p(doc, "BOARD RESOLUTION / MINUTES OF THE MEETING", bold=True, size=12,
        align=WD_ALIGN_PARAGRAPH.CENTER, space_after=10)
 
-    # Date / Time / Location
-    _p(doc, f"Date:      {mtg_date}", size=11)
-    _p(doc, "Time:      11:00 AM", size=11)
-    _p(doc, f"Location:  {parent_addr}", size=11)
-    _p(doc)
+    # ── Date / Time / Location / Agenda table (matches real doc) ──
+    mtbl = doc.add_table(rows=0, cols=2)
+    mtbl.style = "Table Grid"
+    mtbl.columns[0].width = Cm(4)
+    mtbl.columns[1].width = Cm(12)
+    for lbl, val in [
+        ("Date",     mtg_date),
+        ("Time",     "10:00 AM"),
+        ("Location", parent_addr),
+        ("Agenda",   "Appointment of Authorising Officer for UK Business Establishment and "
+                     "Immigration Sponsorship Licence Application."),
+    ]:
+        row = mtbl.add_row()
+        for cell, txt, bold in [(row.cells[0], lbl, True), (row.cells[1], val, False)]:
+            p = cell.paragraphs[0]
+            p.paragraph_format.space_after = Pt(0)
+            p.paragraph_format.line_spacing = 1.5
+            r = p.add_run(txt)
+            r.font.name = FONT
+            r.font.size = Pt(11)
+            r.bold = bold
 
-    _p(doc,
-       "Agenda: Appointment of Authorising Officer for UK Business Establishment and "
-       "Immigration Sponsorship Licence Application.",
-       bold=True, size=11)
     _p(doc)
 
     # 1. Attendance
@@ -105,8 +117,8 @@ def generate(fields: dict, uk_fields: dict, output_path,
     _p(doc, "The following company officials were present:", size=11)
 
     if attendance_list:
-        for i, person in enumerate(attendance_list, 1):
-            bp = doc.add_paragraph(style="List Number")
+        for person in attendance_list:
+            bp = doc.add_paragraph()
             bp.paragraph_format.space_after = Pt(2)
             bp.paragraph_format.line_spacing = 1.5
             r = bp.add_run(person)
@@ -118,7 +130,7 @@ def generate(fields: dict, uk_fields: dict, output_path,
 
     # 2. Chairperson
     _heading(doc, "2. Chairperson")
-    _p(doc, f"The meeting was chaired by Mr./Ms. {chairperson_name}.", size=11)
+    _p(doc, f"The meeting was chaired by {chairperson_name}.", size=11)
     _p(doc)
 
     # 3. Purpose
@@ -187,7 +199,7 @@ def generate(fields: dict, uk_fields: dict, output_path,
     _p(doc)
     _p(doc)
     _p(doc, "Signed: ___________________________", size=11)
-    _p(doc, f"Mr./Ms. {chairperson_name} – Chairperson", size=11)
+    _p(doc, f"{chairperson_name} – Chairperson", size=11)
     _p(doc)
     _p(doc, "For and on behalf of", size=11)
     _p(doc, parent_name, bold=True, size=11)

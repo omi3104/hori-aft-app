@@ -121,7 +121,7 @@ def generate(fields: dict, uk_fields: dict, output_path, doc_date: str = ""):
     ]
 
     for item in items:
-        np = doc.add_paragraph(style="List Number")
+        np = doc.add_paragraph(style="List Bullet")
         np.paragraph_format.space_after = Pt(6)
         np.paragraph_format.line_spacing = 1.5
         r = np.add_run(item)
@@ -133,7 +133,7 @@ def generate(fields: dict, uk_fields: dict, output_path, doc_date: str = ""):
     _p(doc)
     _p(doc)
     _p(doc, "Signed: ___________________________", size=11)
-    _p(doc, f"Mr./Ms. {ao_name} – Authorising Officer", size=11)
+    _p(doc, f"Mr. {ao_name} – Authorising Officer", size=11)
     _p(doc)
     _p(doc, "For and on behalf of", size=11)
     _p(doc, f"{parent_name} (Pakistan Parent Company) &", size=11)

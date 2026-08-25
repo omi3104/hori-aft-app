@@ -50,16 +50,26 @@ def _add_table_row(table, label, value, header=False):
     vc = row.cells[1]
     lp = lc.paragraphs[0]
     vp = vc.paragraphs[0]
+    lp.paragraph_format.space_after = Pt(0)
+    vp.paragraph_format.space_after = Pt(0)
     lr = lp.add_run(label)
-    vr = vp.add_run(value)
-    for r in (lr, vr):
-        r.font.name = FONT
-        r.font.size = Pt(10)
-        r.bold = True
+    lr.font.name = FONT
+    lr.font.size = Pt(11)
+    lr.bold = True
+    # Handle multi-line values (e.g. SIC codes joined with \n)
+    lines = value.split("\n") if value else [""]
+    for i, line in enumerate(lines):
+        if i > 0:
+            vp.add_run().add_break()
+        vr = vp.add_run(line)
+        vr.font.name = FONT
+        vr.font.size = Pt(11)
+        vr.bold = header
     if header:
         _shade_row(row)
         lr.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
-        vr.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+        for r in vp.runs:
+            r.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
     return row
 
 def generate(fields: dict, uk_fields: dict, output_path):
@@ -86,26 +96,27 @@ def generate(fields: dict, uk_fields: dict, output_path):
     uk_sic_str     = "\n".join(uk_sic) if uk_sic else ""
     psc            = parent_name  # PSC is the parent company
 
-    # ── Intro paragraph ──
-    intro = doc.add_paragraph()
-    intro.paragraph_format.space_after = Pt(8)
-    intro.paragraph_format.space_before = Pt(0)
-    lines = [
-        ("To: Sponsor Casework Operations - UK Visa & Immigration\n", True),
-        ("Reference / Application: Sponsor Licence Application – UK Expansion Worker Route (Global Business Mobility)\n", True),
-        ("We write in reference to the above.\n", True),
-        ("Please find the full legal status and registration particulars of both entities, "
-         "including the parent company's overseas incorporation and the UK subsidiary's "
-         "registration with Companies House.\n", True),
-        ("Furthermore, all supporting documentation will be duly attached to verify and "
-         "substantiate the contents of this submission, and to address any inadvertent omission "
-         "that may arise within this document.", True),
+    # ── Intro — each line is its own paragraph (matches real doc) ──
+    intro_lines = [
+        ("To:", "Sponsor Casework Operations - UK Visa & Immigration"),
+        ("Reference / Application:", "Sponsor Licence Application – UK Expansion Worker Route (Global Business Mobility)"),
+        ("", "We write in reference to the above."),
+        ("", "Please find the full legal status and registration particulars of both entities, "
+             "including the parent company's overseas incorporation and the UK subsidiary's "
+             "registration with Companies House."),
+        ("", "Furthermore, all supporting documentation will be duly attached to verify and "
+             "substantiate the contents of this submission, and to address any inadvertent omission "
+             "that may arise within this document."),
     ]
-    for text, bold in lines:
-        r = intro.add_run(text)
-        r.font.name = FONT
-        r.font.size = Pt(11)
-        r.bold = bold
+    for label, body in intro_lines:
+        p = doc.add_paragraph()
+        p.paragraph_format.space_after = Pt(0)
+        p.paragraph_format.space_before = Pt(0)
+        if label:
+            r1 = p.add_run(label + " ")
+            r1.font.name = FONT; r1.font.size = Pt(11); r1.bold = True
+        r2 = p.add_run(body)
+        r2.font.name = FONT; r2.font.size = Pt(11); r2.bold = True
 
     _p(doc)
 
@@ -117,7 +128,7 @@ def generate(fields: dict, uk_fields: dict, output_path):
 
     _add_table_row(t1, "PARENT COMPANY", "DETAILS", header=True)
     parent_rows = [
-        ("Business / Company Name",     parent_name),
+        ("Business/ Company Name",      parent_name),
         ("Registration Number",         parent_reg),
         ("Reference No",                parent_ref),
         ("Registered On",               parent_date),
@@ -130,12 +141,6 @@ def generate(fields: dict, uk_fields: dict, output_path):
         _add_table_row(t1, label, value)
 
     _p(doc)
-    _p(doc, "Thank You,", bold=True, size=11)
-    _p(doc)
-    _p(doc, "For and on behalf of", bold=True, size=11)
-    _p(doc, f"{parent_name} (Pakistan Parent Company) &", bold=True, size=11)
-    _p(doc, f"{uk_name} (UK Subsidiary)", bold=True, size=11)
-    _p(doc)
 
     # ── UK Subsidiary Table ──
     t2 = doc.add_table(rows=0, cols=2)
@@ -145,17 +150,24 @@ def generate(fields: dict, uk_fields: dict, output_path):
 
     _add_table_row(t2, "UK SUBSIDAIRY", "DETAILS", header=True)
     uk_rows = [
-        ("Business / Company Name",          uk_name),
+        ("Business/ Company Name",           uk_name),
         ("Company Number",                   uk_num),
         ("Incorporated On",                  uk_inc),
         ("Registered Office Address",        uk_addr),
         ("Persons with Significant Control (PSC):", psc),
         ("Correspondence Address",           parent_addr),
-        ("Nature of Business (SIC)",         uk_sic_str),
+        ("Nature of business (SIC)",         uk_sic_str),
         ("Business Trading Address",         ""),
     ]
     for label, value in uk_rows:
         _add_table_row(t2, label, value)
+
+    _p(doc)
+    _p(doc, "Thank You,", bold=True, size=11)
+    _p(doc)
+    _p(doc, "For and on behalf of", bold=True, size=11)
+    _p(doc, f"{parent_name} (Pakistan Parent Company) &", bold=True, size=11)
+    _p(doc, f"{uk_name} (UK Subsidiary)", bold=True, size=11)
 
     if output_path is None:
         return _to_bytes(doc)

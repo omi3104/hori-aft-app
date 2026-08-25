@@ -60,12 +60,15 @@ def _add_table_row(table, label, value, header=False):
     row = table.add_row()
     lp = row.cells[0].paragraphs[0]
     vp = row.cells[1].paragraphs[0]
+    lp.paragraph_format.space_after = Pt(0)
+    vp.paragraph_format.space_after = Pt(0)
     lr = lp.add_run(label)
     vr = vp.add_run(value)
     for r in (lr, vr):
         r.font.name = FONT
-        r.font.size = Pt(10)
-        r.bold = True
+        r.font.size = Pt(11)
+    lr.bold = True
+    vr.bold = header
     if header:
         _shade_row(row)
         lr.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)

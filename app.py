@@ -1,6 +1,5 @@
 """
 Expansion Drafter — Streamlit Web App
-Chisty Law Chambers LLP
 """
 
 import os, sys, io
@@ -13,8 +12,8 @@ from core import companies_house, document_reader, extractor, draft_generator
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Expansion Drafter | Chisty Law Chambers",
-    page_icon="⚖️",
+    page_title="Expansion Drafter",
+    page_icon="🏛️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -22,32 +21,136 @@ st.set_page_config(
 # ── Styles ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
+    /* ── Global font ── */
+    html, body, [class*="css"] { font-family: 'Inter', 'Segoe UI', sans-serif; }
+
+    /* ── Sidebar ── */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0f1f3d 0%, #1a3260 100%);
+    }
+    section[data-testid="stSidebar"] * { color: #e8edf5 !important; }
+    section[data-testid="stSidebar"] .stButton button {
+        background: rgba(255,255,255,0.08) !important;
+        border: 1px solid rgba(255,255,255,0.15) !important;
+        color: #e8edf5 !important;
+        border-radius: 8px !important;
+        transition: all 0.2s;
+    }
+    section[data-testid="stSidebar"] .stButton button:hover {
+        background: rgba(255,255,255,0.18) !important;
+    }
+    section[data-testid="stSidebar"] .stButton [kind="primary"] button {
+        background: #3b82f6 !important;
+        border-color: #3b82f6 !important;
+    }
+
+    /* ── Main header ── */
     .main-header {
-        background: #1B3A6B; color: white; padding: 18px 24px;
-        border-radius: 8px; margin-bottom: 20px;
+        background: linear-gradient(135deg, #0f1f3d 0%, #1e3a8a 60%, #1d4ed8 100%);
+        color: white; padding: 28px 32px;
+        border-radius: 16px; margin-bottom: 28px;
+        box-shadow: 0 8px 32px rgba(15,31,61,0.25);
     }
-    .main-header h1 { margin: 0; font-size: 1.8rem; }
-    .main-header p  { margin: 4px 0 0; font-size: 0.95rem; opacity: 0.85; }
+    .main-header h1 { margin: 0; font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+    .main-header p  { margin: 6px 0 0; font-size: 1rem; opacity: 0.75; font-weight: 400; }
+
+    /* ── Client cards ── */
     .client-card {
-        border: 1px solid #ddd; border-radius: 8px;
-        padding: 16px 20px; margin-bottom: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 14px;
         background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        transition: box-shadow 0.2s;
     }
-    .status-grey   { color: #888; font-weight: bold; }
-    .status-orange { color: #C05C00; font-weight: bold; }
-    .status-green  { color: #2a7a2a; font-weight: bold; }
+    .client-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+
+    /* ── Status badges ── */
+    .badge {
+        display: inline-block; padding: 3px 10px;
+        border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+    }
+    .badge-grey   { background: #f1f5f9; color: #64748b; }
+    .badge-orange { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+    .badge-green  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+    /* ── Step progress ── */
+    .step-bar {
+        display: flex; gap: 0; margin-bottom: 28px;
+        border-radius: 12px; overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .step-item {
+        flex: 1; padding: 14px 10px; text-align: center;
+        font-size: 0.82rem; font-weight: 600;
+        background: #f8fafc; color: #94a3b8;
+        border-right: 1px solid #e2e8f0;
+    }
+    .step-item:last-child { border-right: none; }
+    .step-item.done {
+        background: #dbeafe; color: #1d4ed8;
+    }
+    .step-item.active {
+        background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+        color: white;
+    }
+    .step-num {
+        display: block; font-size: 1rem; margin-bottom: 2px;
+    }
+
+    /* ── Info / note boxes ── */
     .step-box {
-        background: #f0f4ff; border-left: 4px solid #1B3A6B;
-        padding: 12px 16px; border-radius: 4px; margin: 12px 0;
+        background: #eff6ff; border-left: 4px solid #3b82f6;
+        padding: 13px 18px; border-radius: 8px; margin: 14px 0;
+        font-size: 0.93rem; color: #1e3a8a;
     }
     .note-box {
-        background: #fff8e7; border-left: 4px solid #C05C00;
-        padding: 10px 14px; border-radius: 4px; margin: 8px 0;
-        font-size: 0.9rem;
+        background: #fffbeb; border-left: 4px solid #f59e0b;
+        padding: 11px 16px; border-radius: 8px; margin: 10px 0;
+        font-size: 0.88rem; color: #92400e;
     }
+
+    /* ── Section headers ── */
+    .section-header {
+        font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; color: #64748b;
+        margin: 22px 0 10px; padding-bottom: 6px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    /* ── Download button ── */
     div[data-testid="stDownloadButton"] button {
-        background: #1B3A6B !important; color: white !important;
-        border-radius: 6px !important;
+        background: linear-gradient(135deg, #1e3a8a, #1d4ed8) !important;
+        color: white !important; border-radius: 8px !important;
+        border: none !important; font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(29,78,216,0.3) !important;
+    }
+
+    /* ── Primary buttons ── */
+    .stButton [kind="primary"] button, button[kind="primary"] {
+        background: linear-gradient(135deg, #1e3a8a, #1d4ed8) !important;
+        border: none !important; border-radius: 8px !important;
+        font-weight: 600 !important;
+    }
+
+    /* ── Inputs ── */
+    .stTextInput input, .stTextArea textarea, .stSelectbox select {
+        border-radius: 8px !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+
+    /* ── Expander ── */
+    .streamlit-expanderHeader {
+        font-weight: 600 !important; font-size: 0.93rem !important;
+        background: #f8fafc !important; border-radius: 8px !important;
+    }
+
+    /* ── Dashboard count pill ── */
+    .count-pill {
+        display: inline-block; background: #dbeafe; color: #1d4ed8;
+        border-radius: 20px; padding: 2px 10px;
+        font-size: 0.8rem; font-weight: 700; margin-left: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -60,38 +163,56 @@ if "page" not in st.session_state:
 if "new_client" not in st.session_state:
     st.session_state.new_client = {}
 
+groq_ok = bool(os.environ.get("GROQ_API_KEY"))
+ch_ok   = bool(os.environ.get("CH_API_KEY"))
+
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("### ⚖️ Expansion Drafter")
-    st.markdown("*Chisty Law Chambers LLP*")
+    st.markdown("""
+    <div style="padding: 8px 0 20px;">
+      <div style="font-size:1.5rem; margin-bottom:4px;">🏛️</div>
+      <div style="font-size:1.15rem; font-weight:700; letter-spacing:-0.3px;">Expansion Drafter</div>
+      <div style="font-size:0.78rem; opacity:0.55; margin-top:2px;">UK Sponsor Licence System</div>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.divider()
 
-    groq_ok = bool(os.environ.get("GROQ_API_KEY"))
-    ch_ok   = bool(os.environ.get("CH_API_KEY"))
-    st.markdown(f"{'🟢' if groq_ok else '🔴'} **Groq API** {'Connected' if groq_ok else 'Not configured'}")
-    st.markdown(f"{'🟢' if ch_ok   else '🔴'} **Companies House** {'Connected' if ch_ok else 'Not configured'}")
-
-    st.divider()
-    if st.button("📋 Dashboard", use_container_width=True):
+    if st.button("📋  Dashboard", use_container_width=True):
         st.session_state.page = "dashboard"
         st.rerun()
-    if st.button("➕ New Client", use_container_width=True,
+    if st.button("➕  New Client", use_container_width=True,
                  type="primary" if st.session_state.page == "new_client" else "secondary"):
         st.session_state.page = "new_client"
         st.session_state.new_client = {}
         st.rerun()
 
     st.divider()
-    st.caption("Legend")
-    st.markdown("⬜ Grey — no drafts yet")
-    st.markdown("🟠 Orange — Phase 1 done")
-    st.markdown("🟢 Green — fully complete")
+
+    total = len(st.session_state.clients)
+    done1 = sum(1 for c in st.session_state.clients if c.get("phase1_done"))
+    done2 = sum(1 for c in st.session_state.clients if c.get("phase2_done"))
+    st.markdown(f"""
+    <div style="font-size:0.78rem; opacity:0.6; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.06em;">Overview</div>
+    <div style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem;">
+      <div>📁 Total Clients &nbsp;<b>{total}</b></div>
+      <div>🟠 Phase 1 Done &nbsp;<b>{done1}</b></div>
+      <div>🟢 Fully Complete &nbsp;<b>{done2}</b></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if not groq_ok or not ch_ok:
+        st.divider()
+        if not groq_ok:
+            st.warning("⚠️ AI service not configured", icon=None)
+        if not ch_ok:
+            st.warning("⚠️ Company lookup not configured", icon=None)
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="main-header">
-  <h1>⚖️ Expansion Drafter</h1>
-  <p>UK Expansion Worker Sponsor Licence — Automated Draft Generator</p>
+  <h1>🏛️ Expansion Drafter</h1>
+  <p>UK Expansion Worker Sponsor Licence &nbsp;·&nbsp; Automated Document Generator</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -99,10 +220,17 @@ st.markdown("""
 # PAGE: DASHBOARD
 # ══════════════════════════════════════════════════════════════════════════════
 if st.session_state.page == "dashboard":
-    st.subheader("Client Dashboard")
+    st.markdown('<div class="section-header">Client Cases</div>', unsafe_allow_html=True)
 
     if not st.session_state.clients:
-        st.info("No clients yet. Click **➕ New Client** in the sidebar to get started.")
+        st.markdown("""
+        <div style="text-align:center; padding:60px 20px; background:#f8fafc;
+             border-radius:16px; border:2px dashed #e2e8f0; color:#94a3b8;">
+          <div style="font-size:2.5rem; margin-bottom:12px;">📂</div>
+          <div style="font-size:1.1rem; font-weight:600; color:#64748b;">No clients yet</div>
+          <div style="font-size:0.9rem; margin-top:6px;">Click <b>➕ New Client</b> in the sidebar to begin</div>
+        </div>
+        """, unsafe_allow_html=True)
     else:
         for i, client in enumerate(st.session_state.clients):
             name    = client.get("name", "Unknown")
@@ -111,21 +239,20 @@ if st.session_state.page == "dashboard":
             phase2  = client.get("phase2_done", False)
 
             if phase1 and phase2:
-                status_cls = "status-green"
-                status_txt = "🟢 All Complete"
+                badge = '<span class="badge badge-green">✓ Complete</span>'
             elif phase1:
-                status_cls = "status-orange"
-                status_txt = "🟠 Phase 1 Done — F.2.8 Pending"
+                badge = '<span class="badge badge-orange">Phase 1 Done</span>'
             else:
-                status_cls = "status-grey"
-                status_txt = "⬜ In Progress"
+                badge = '<span class="badge badge-grey">In Progress</span>'
 
             with st.container():
                 st.markdown(f"""
                 <div class="client-card">
-                  <strong style="font-size:1.1rem">{name}</strong>
-                  &nbsp;&nbsp;<span class="{status_cls}">{status_txt}</span><br>
-                  <small style="color:#666">{uk_name}</small>
+                  <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+                    <span style="font-size:1.05rem; font-weight:700; color:#0f1f3d;">{name}</span>
+                    {badge}
+                  </div>
+                  <div style="font-size:0.82rem; color:#94a3b8;">{uk_name}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
