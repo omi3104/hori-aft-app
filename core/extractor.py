@@ -68,6 +68,8 @@ Extract remote/seconded staff information from the document and return ONLY vali
 """
 
 def _parse(raw: str) -> dict:
+    # Strip thinking tags from reasoning models (e.g. qwen3)
+    raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL)
     raw = re.sub(r"^```[a-z]*\n?", "", raw.strip())
     raw = re.sub(r"\n?```$", "", raw)
     try:
