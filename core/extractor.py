@@ -137,25 +137,29 @@ def _client() -> Groq:
     return Groq(api_key=key)
 
 def extract(doc_texts: dict) -> dict:
-    combined = "\n\n".join(f"=== {k} ===\n{v[:4000]}" for k, v in doc_texts.items())
+    # Groq account TPM limit for this model is 8000 tokens (prompt + max_tokens combined).
+    # OCR'd/dense source text can tokenize well above a chars/4 estimate, so cap input
+    # conservatively: each doc to 1200 chars, total combined to 4500 chars, and trim
+    # the output budget to leave headroom.
+    combined = "\n\n".join(f"=== {k} ===\n{v[:1200]}" for k, v in doc_texts.items())
     resp = _client().chat.completions.create(
         model="openai/gpt-oss-20b",
         messages=[
             {"role": "system", "content": EXTRACTION_PROMPT},
-            {"role": "user", "content": combined[:12000]},
+            {"role": "user", "content": combined[:4500]},
         ],
-        temperature=0.1, max_tokens=4000,
+        temperature=0.1, max_tokens=1400,
     )
     return _parse(resp.choices[0].message.content)
 
 def extract_remote_staff(doc_texts: dict) -> dict:
-    combined = "\n\n".join(f"=== {k} ===\n{v[:5000]}" for k, v in doc_texts.items())
+    combined = "\n\n".join(f"=== {k} ===\n{v[:2500]}" for k, v in doc_texts.items())
     resp = _client().chat.completions.create(
         model="openai/gpt-oss-20b",
         messages=[
             {"role": "system", "content": STAFF_PROMPT},
-            {"role": "user", "content": combined[:14000]},
+            {"role": "user", "content": combined[:9000]},
         ],
-        temperature=0.1, max_tokens=2000,
+        temperature=0.1, max_tokens=1400,
     )
     return _parse(resp.choices[0].message.content)
