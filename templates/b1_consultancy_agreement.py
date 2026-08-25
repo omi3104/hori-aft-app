@@ -1,5 +1,6 @@
 """
 ANNEX B.1 — Consultancy Agreement between the Business & Chisty Law Chambers LLP
+Font: Times New Roman 11pt, 1.5x line spacing (matches real document)
 """
 import io, os
 from docx import Document
@@ -8,6 +9,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
+FONT = "Times New Roman"
 NAVY = RGBColor(0x1B, 0x3A, 0x6B)
 
 def _to_bytes(doc):
@@ -16,12 +18,18 @@ def _to_bytes(doc):
     buf.seek(0)
     return buf.read()
 
-def _p(doc, text="", bold=False, size=11, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=4):
+def _set_doc_font(doc):
+    doc.styles['Normal'].font.name = FONT
+
+def _p(doc, text="", bold=False, size=11, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=8):
     p = doc.add_paragraph()
     p.alignment = align
     p.paragraph_format.space_after = Pt(space_after)
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.line_spacing = 1.5
     if text:
         r = p.add_run(text)
+        r.font.name = FONT
         r.font.size = Pt(size)
         r.bold = bold
     return p
@@ -30,7 +38,9 @@ def _section(doc, title):
     p = doc.add_paragraph()
     p.paragraph_format.space_before = Pt(10)
     p.paragraph_format.space_after = Pt(4)
+    p.paragraph_format.line_spacing = 1.5
     r = p.add_run(title)
+    r.font.name = FONT
     r.bold = True
     r.font.size = Pt(11)
     r.font.color.rgb = NAVY
@@ -52,15 +62,18 @@ def _add_table_row(table, label, value, header=False):
     vp = row.cells[1].paragraphs[0]
     lr = lp.add_run(label)
     vr = vp.add_run(value)
-    lr.font.size = Pt(10); lr.bold = True
-    vr.font.size = Pt(10); vr.bold = True
+    for r in (lr, vr):
+        r.font.name = FONT
+        r.font.size = Pt(10)
+        r.bold = True
     if header:
         _shade_row(row)
-        lr.font.color.rgb = RGBColor(0xFF,0xFF,0xFF)
-        vr.font.color.rgb = RGBColor(0xFF,0xFF,0xFF)
+        lr.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+        vr.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
 
 def generate(fields: dict, uk_fields: dict, output_path, agreement_date: str = ""):
     doc = Document()
+    _set_doc_font(doc)
     for sec in doc.sections:
         sec.top_margin    = Cm(2.5)
         sec.bottom_margin = Cm(2.5)
@@ -79,7 +92,6 @@ def generate(fields: dict, uk_fields: dict, output_path, agreement_date: str = "
 
     # Title
     _p(doc, "CONSULTANCY AGREEMENT", bold=True, size=13, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=10)
-
     _p(doc, f"This Agreement is made on the {agr_date}, by and between:", size=11)
     _p(doc)
 
@@ -88,16 +100,16 @@ def generate(fields: dict, uk_fields: dict, output_path, agreement_date: str = "
     t1.style = "Table Grid"
     t1.columns[0].width = Cm(7)
     t1.columns[1].width = Cm(9)
-    _add_table_row(t1, "PARENT COMPANY",       "DETAILS",    header=True)
-    _add_table_row(t1, "Business/ Company Name", parent_name)
-    _add_table_row(t1, "Registration Number",   parent_reg)
-    _add_table_row(t1, "Reference No",          parent_ref)
-    _add_table_row(t1, "Registered On",         parent_date)
+    _add_table_row(t1, "PARENT COMPANY",           "DETAILS",    header=True)
+    _add_table_row(t1, "Business/ Company Name",   parent_name)
+    _add_table_row(t1, "Registration Number",      parent_reg)
+    _add_table_row(t1, "Reference No",             parent_ref)
+    _add_table_row(t1, "Registered On",            parent_date)
     _add_table_row(t1, "Business Registered Address", parent_addr)
-    _add_table_row(t1, "UK SUBSIDIARY",         "DETAILS",   header=True)
-    _add_table_row(t1, "Business/ Company Name", uk_name)
-    _add_table_row(t1, "Company Number",        uk_num)
-    _add_table_row(t1, "Incorporated On",       uk_inc)
+    _add_table_row(t1, "UK SUBSIDIARY",            "DETAILS",    header=True)
+    _add_table_row(t1, "Business/ Company Name",   uk_name)
+    _add_table_row(t1, "Company Number",           uk_num)
+    _add_table_row(t1, "Incorporated On",          uk_inc)
 
     _p(doc, "(hereinafter referred to as \"the Client\"),", size=11)
     _p(doc)
@@ -109,7 +121,7 @@ def generate(fields: dict, uk_fields: dict, output_path, agreement_date: str = "
     t2.style = "Table Grid"
     t2.columns[0].width = Cm(7)
     t2.columns[1].width = Cm(9)
-    _add_table_row(t2, "Business/ Company Name",    "CHISTY LAW CHAMBERS LLP",          header=False)
+    _add_table_row(t2, "Business/ Company Name",   "CHISTY LAW CHAMBERS LLP")
     _add_table_row(t2, "Registration Number (SECP)\nIncorporation Date", "0269333\n16 September 2024")
     _add_table_row(t2, "Business Registered Address", "2nd floor, Almas Tower, MM Alam Rd, Gulberg II, Lahore, Pakistan.")
 
@@ -144,7 +156,10 @@ def generate(fields: dict, uk_fields: dict, output_path, agreement_date: str = "
     for s in services:
         bp = doc.add_paragraph(style="List Bullet")
         bp.paragraph_format.space_after = Pt(2)
-        bp.add_run(s).font.size = Pt(11)
+        bp.paragraph_format.line_spacing = 1.5
+        r = bp.add_run(s)
+        r.font.name = FONT
+        r.font.size = Pt(11)
     _p(doc)
     _p(doc, "The Consultant has not:", bold=True, size=11)
     not_services = [
@@ -156,7 +171,10 @@ def generate(fields: dict, uk_fields: dict, output_path, agreement_date: str = "
     for s in not_services:
         bp = doc.add_paragraph(style="List Bullet")
         bp.paragraph_format.space_after = Pt(2)
-        bp.add_run(s).font.size = Pt(11)
+        bp.paragraph_format.line_spacing = 1.5
+        r = bp.add_run(s)
+        r.font.name = FONT
+        r.font.size = Pt(11)
     _p(doc)
     _p(doc,
        "The Client accepts complete and sole responsibility for the accuracy, completeness, and "
@@ -190,7 +208,10 @@ def generate(fields: dict, uk_fields: dict, output_path, agreement_date: str = "
     ]
     for f in fee_items:
         bp = doc.add_paragraph(style="List Bullet")
-        bp.add_run(f).font.size = Pt(11)
+        bp.paragraph_format.line_spacing = 1.5
+        r = bp.add_run(f)
+        r.font.name = FONT
+        r.font.size = Pt(11)
 
     _section(doc, "5. Confidentiality")
     _p(doc,

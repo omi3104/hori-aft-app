@@ -44,16 +44,19 @@ def generate_phase1_zip(fields: dict, uk_fields: dict, extra: dict = None) -> by
         add("ANNEX C", "ANNEX C.1 - Letter from Company HR, confirming Employment.docx",
             lambda: c1.generate(fields, uk_fields, output_path=None,
                                 salary=extra.get("salary", ""),
-                                start_date=extra.get("start_date", "")))
+                                start_date=extra.get("start_date", ""),
+                                doc_date=extra.get("c1_doc_date", "")))
 
         add("ANNEX C",
             "ANNEX C.2 - Board Resolution – Minutes of Meeting from the Parent Company.docx",
             lambda: c2.generate(fields, uk_fields, output_path=None,
                                 meeting_date=extra.get("meeting_date", ""),
-                                directors=fields.get("parent_directors", [])))
+                                directors=fields.get("parent_directors", []),
+                                attendees=extra.get("attendees", [])))
 
         add("ANNEX C", "ANNEX C.3 - AO Details.docx",
-            lambda: c3.generate(fields, uk_fields, output_path=None))
+            lambda: c3.generate(fields, uk_fields, output_path=None,
+                                doc_date=extra.get("c3_doc_date", "")))
 
         add("ANNEX C", "ANNEX C.8 - AO – Statement of Truth.docx",
             lambda: c8.generate(fields, uk_fields, output_path=None,

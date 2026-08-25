@@ -1,10 +1,13 @@
 """
 ANNEX C.8 — Statement of Truth by the Authorising Officer
+Font: Arial 11pt, 1.5x line spacing (matches real document)
 """
 import io, os
 from docx import Document
 from docx.shared import Pt, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+FONT = "Arial"
 
 def _to_bytes(doc):
     buf = io.BytesIO()
@@ -12,18 +15,25 @@ def _to_bytes(doc):
     buf.seek(0)
     return buf.read()
 
-def _p(doc, text="", bold=False, size=11, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=4):
+def _set_doc_font(doc):
+    doc.styles['Normal'].font.name = FONT
+
+def _p(doc, text="", bold=False, size=11, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=0):
     p = doc.add_paragraph()
     p.alignment = align
     p.paragraph_format.space_after = Pt(space_after)
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.line_spacing = 1.5
     if text:
         r = p.add_run(text)
+        r.font.name = FONT
         r.font.size = Pt(size)
         r.bold = bold
     return p
 
 def generate(fields: dict, uk_fields: dict, output_path, doc_date: str = ""):
     doc = Document()
+    _set_doc_font(doc)
     for sec in doc.sections:
         sec.top_margin    = Cm(2.5)
         sec.bottom_margin = Cm(2.5)
@@ -44,10 +54,10 @@ def generate(fields: dict, uk_fields: dict, output_path, doc_date: str = ""):
     _p(doc, "STATEMENT OF TRUTH", bold=True, size=13, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=2)
     _p(doc, "BY THE AUTHORISING OFFICER", bold=True, size=12, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=10)
 
-    _p(doc, "Reference: Sponsor Licence Application – UK Expansion Worker Route (Global Business Mobility)", bold=True, size=11)
+    _p(doc, "Reference: Sponsor Licence Application – UK Expansion Worker Route (Global Business Mobility)", bold=True, size=11, space_after=6)
     _p(doc)
 
-    _p(doc, f"Business Name:", bold=True, size=11)
+    _p(doc, "Business Name:", bold=True, size=11)
     _p(doc, f"{parent_name}     Address: {parent_addr}", size=11)
     _p(doc)
     _p(doc, f"{uk_name} (Subsidiary Registered Office) Address: {uk_addr}", size=11)
@@ -110,10 +120,13 @@ def generate(fields: dict, uk_fields: dict, output_path, doc_date: str = ""):
         "knowledge and belief.",
     ]
 
-    for i, item in enumerate(items, 1):
+    for item in items:
         np = doc.add_paragraph(style="List Number")
         np.paragraph_format.space_after = Pt(6)
-        np.add_run(item).font.size = Pt(11)
+        np.paragraph_format.line_spacing = 1.5
+        r = np.add_run(item)
+        r.font.name = FONT
+        r.font.size = Pt(11)
 
     _p(doc)
     _p(doc, "Thank You,", size=11)

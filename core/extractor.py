@@ -25,7 +25,9 @@ You are a document analysis assistant. Extract the following from the document t
   "job_description": "",
   "job_duties": [],
   "reporting_to": "",
-  "department": ""
+  "department": "",
+  "parent_website": "",
+  "board_attendees": []
 }
 
 Rules:
@@ -42,7 +44,9 @@ Rules:
 - job_duties: list of key duties/responsibilities as bullet points (extract from Business Profile or Job Description section in any document)
 - reporting_to: who the employee reports to (from org chart or CV)
 - department: department or division name (from business profile or org chart)
-- Files prefixed [OPTIONAL] are supplementary — prioritise them for job_description, job_duties, reporting_to, department
+- parent_website: company website URL if mentioned in any document
+- board_attendees: list of senior management with designations from hierarchy/org chart — format each as "Full Name, Designation" (e.g. "Muhammad Usman, Chief Executive Officer"). Include AO plus other senior managers. If no org chart provided, leave as empty list.
+- Files prefixed [OPTIONAL] are supplementary — prioritise them for job_description, job_duties, reporting_to, department, board_attendees, parent_website
 - Return "" or [] for any field not found
 """
 

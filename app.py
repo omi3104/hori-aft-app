@@ -321,6 +321,7 @@ elif st.session_state.page == "new_client":
         fields    = nc.get("fields", {})
         uk_fields = nc.get("uk_fields", {})
 
+        # ── UK Subsidiary (read-only) ──────────────────────────────────────────
         st.markdown("#### 🏢 UK Subsidiary *(from Companies House — read-only)*")
         c1, c2, c3 = st.columns(3)
         with c1: st.text_input("UK Company Name", uk_fields.get("company_name",""), disabled=True)
@@ -328,6 +329,7 @@ elif st.session_state.page == "new_client":
         with c3: st.text_input("Incorporated On", uk_fields.get("incorporation_date",""), disabled=True)
         st.text_input("UK Registered Address", uk_fields.get("registered_address",""), disabled=True)
 
+        # ── Parent Company ─────────────────────────────────────────────────────
         st.divider()
         st.markdown("#### 🏭 Parent Company *(AI-extracted — edit if wrong)*")
 
@@ -339,11 +341,14 @@ elif st.session_state.page == "new_client":
         with c2:
             fields["parent_reg_date"] = st.text_input("Registered On (DD Month YYYY)", fields.get("parent_reg_date",""))
             fields["parent_address"]  = st.text_input("Registered Address", fields.get("parent_address",""))
+            fields["parent_website"]  = st.text_input("Company Website", fields.get("parent_website",""),
+                                                       help="Used in A.1 Title Pages table")
 
         dirs_raw = st.text_area("Directors / Partners (one per line)",
                                  "\n".join(fields.get("parent_directors", [])), height=80)
         fields["parent_directors"] = [d.strip() for d in dirs_raw.split("\n") if d.strip()]
 
+        # ── Authorising Officer ────────────────────────────────────────────────
         st.divider()
         st.markdown("#### 👤 Authorising Officer *(AI-extracted — edit if wrong)*")
 
@@ -355,23 +360,17 @@ elif st.session_state.page == "new_client":
             fields["ao_passport"]   = st.text_input("Passport Number", fields.get("ao_passport",""))
             fields["ao_nationality"]= st.text_input("Nationality", fields.get("ao_nationality",""))
         with c3:
-            fields["ao_position"]   = st.text_input("Position (Parent Co.)", fields.get("ao_position",""))
-            fields["ao_uk_title"]   = st.text_input("UK Job Title", fields.get("ao_uk_title","Executive Director"))
+            fields["ao_position"]   = st.text_input("Position in Parent Company", fields.get("ao_position",""))
 
-        c1, c2, c3 = st.columns(3)
-        with c1: fields["ao_soc_code"]          = st.text_input("SOC Code", fields.get("ao_soc_code","1111"))
-        with c2: fields["ao_going_rate"]         = st.text_input("Going Rate (Annual)", fields.get("ao_going_rate","£60,000"))
-        with c3: fields["ao_going_rate_hourly"]  = st.text_input("Going Rate (Hourly)", fields.get("ao_going_rate_hourly","£30.77 per hour"))
-
+        # ── Job Description ────────────────────────────────────────────────────
         st.divider()
         st.markdown("#### 💼 Job Description *(from Business Profile / CV)*")
 
         c1, c2 = st.columns(2)
         with c1:
             fields["reporting_to"] = st.text_input("Reports To", fields.get("reporting_to",""))
-            fields["department"]   = st.text_input("Department / Division", fields.get("department",""))
         with c2:
-            pass
+            fields["department"]   = st.text_input("Department / Division", fields.get("department",""))
 
         fields["job_description"] = st.text_area(
             "Job Description (paragraph)",
@@ -379,7 +378,6 @@ elif st.session_state.page == "new_client":
             height=100,
             help="Extracted from Business Profile. Edit if needed.",
         )
-
         duties_raw = st.text_area(
             "Key Duties / Responsibilities (one per line)",
             "\n".join(fields.get("job_duties", [])),
@@ -388,20 +386,99 @@ elif st.session_state.page == "new_client":
         )
         fields["job_duties"] = [d.strip() for d in duties_raw.split("\n") if d.strip()]
 
+        # ══════════════════════════════════════════════════════════════════════
+        # PER-DOCUMENT DETAILS
+        # ══════════════════════════════════════════════════════════════════════
         st.divider()
-        st.markdown("#### ✏️ Manual Entries")
+        st.markdown("#### 📋 Per-Document Details")
+        st.markdown('<div class="note-box">Complete the fields below for each draft. Dates can be entered as DD Month YYYY or DD/MM/YYYY.</div>',
+                    unsafe_allow_html=True)
 
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            extra_salary    = st.text_input("Salary (if different from going rate)", "")
-            extra_start     = st.text_input("Employment Start Date", "")
-        with c2:
-            extra_agr_date  = st.text_input("Agreement Date (B.1)", "")
-            extra_mtg_date  = st.text_input("Meeting Date (C.2)", "")
-        with c3:
-            extra_doc_date  = st.text_input("Statement Date (C.8)", "")
-            fields["application_date"] = extra_doc_date or fields.get("application_date","")
+        # ── A.1 Title Pages ───────────────────────────────────────────────────
+        with st.expander("📄 A.1 — Title Pages", expanded=True):
+            st.caption("Note: Company Website is in the Parent Company section above.")
 
+        # ── B.1 Consultancy Agreement ─────────────────────────────────────────
+        with st.expander("📋 B.1 — Consultancy Agreement", expanded=True):
+            extra_agr_date = st.text_input("Date of Agreement", "",
+                                            key="agr_date",
+                                            placeholder="e.g. 22 April 2026",
+                                            help="The date this consultancy agreement was signed")
+
+        # ── C.1 Employment Confirmation Letter ────────────────────────────────
+        with st.expander("📝 C.1 — Employment Confirmation Letter (HR Letter)", expanded=True):
+            c1a, c1b, c1c = st.columns(3)
+            with c1a:
+                extra_c1_date  = st.text_input("Date of Letter", "", key="c1_date",
+                                                placeholder="e.g. 08 May 2026")
+            with c1b:
+                extra_start    = st.text_input("Employment Start Date", "", key="start_date",
+                                                placeholder="e.g. 01 January 2020")
+            with c1c:
+                extra_salary   = st.text_input("Salary (if different from going rate)", "",
+                                                key="salary")
+
+        # ── C.2 Board Resolution ──────────────────────────────────────────────
+        with st.expander("📋 C.2 — Board Resolution / Minutes of Meeting", expanded=True):
+            c2a, c2b = st.columns(2)
+            with c2a:
+                extra_mtg_date = st.text_input("Date of Meeting", "", key="mtg_date",
+                                                placeholder="e.g. 09 February 2026")
+            with c2b:
+                st.caption("Attendees extracted from Hierarchy Chart — confirm below.")
+
+            # Pre-populate attendees from AI-extracted board_attendees or directors
+            extracted_attendees = fields.get("board_attendees", [])
+            if not extracted_attendees:
+                # Fall back: build from directors with their designations (name only if no designation info)
+                extracted_attendees = fields.get("parent_directors", [])
+
+            attendees_raw = st.text_area(
+                "Board Meeting Attendees — one per line, format: Name, Designation",
+                "\n".join(extracted_attendees),
+                height=120,
+                key="attendees",
+                help="E.g.: Muhammad Usman, Chief Executive Officer\nSara Ahmed, Finance Manager\n"
+                     "These names & titles appear in Section 1 (Attendance) of the Board Resolution.",
+            )
+            attendees_list = [a.strip() for a in attendees_raw.split("\n") if a.strip()]
+
+            if not attendees_list:
+                st.warning("⚠️ No attendees entered. Upload a Hierarchy Chart in Step 2 for automatic extraction, or type them above.")
+
+        # ── C.3 AO Details ────────────────────────────────────────────────────
+        with st.expander("📄 C.3 — AO Details (Letter to Home Office)", expanded=True):
+            st.caption("UK job role details for C.3 — confirm or edit below.")
+            c3a, c3b, c3c, c3d = st.columns(4)
+            with c3a:
+                fields["ao_uk_title"]  = st.text_input("UK Proposed Job Title",
+                                                         fields.get("ao_uk_title","Executive Director"),
+                                                         key="c3_title")
+            with c3b:
+                fields["ao_soc_code"]  = st.text_input("SOC Code",
+                                                         fields.get("ao_soc_code","1111"),
+                                                         key="c3_soc")
+            with c3c:
+                fields["ao_going_rate"] = st.text_input("Annual Salary / Going Rate",
+                                                          fields.get("ao_going_rate","£60,000"),
+                                                          key="c3_rate")
+            with c3d:
+                fields["ao_going_rate_hourly"] = st.text_input("Hourly Rate",
+                                                                 fields.get("ao_going_rate_hourly","£30.77 per hour"),
+                                                                 key="c3_hourly")
+            extra_c3_date = st.text_input("Date of Letter", "", key="c3_date",
+                                           placeholder="e.g. 08 May 2026")
+
+        # ── C.8 Statement of Truth ────────────────────────────────────────────
+        with st.expander("✍️ C.8 — Statement of Truth (by Authorising Officer)", expanded=True):
+            extra_doc_date = st.text_input("Date Signed", "", key="c8_date",
+                                            placeholder="e.g. 08-05-2026")
+
+        # ── E.12 Employment Contract ───────────────────────────────────────────
+        with st.expander("📋 E.12 — Employment Contract", expanded=True):
+            st.caption("Start date and salary come from C.1 fields above.")
+
+        # ══════════════════════════════════════════════════════════════════════
         nc["fields"] = fields
         nc["extra"]  = {
             "salary":         extra_salary,
@@ -409,6 +486,9 @@ elif st.session_state.page == "new_client":
             "agreement_date": extra_agr_date,
             "meeting_date":   extra_mtg_date,
             "doc_date":       extra_doc_date,
+            "attendees":      attendees_list,
+            "c1_doc_date":    extra_c1_date,
+            "c3_doc_date":    extra_c3_date,
         }
 
         st.divider()

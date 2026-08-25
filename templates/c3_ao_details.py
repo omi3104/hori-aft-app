@@ -1,11 +1,14 @@
 """
 ANNEX C.3 — AO Details
 Letter to Sponsor Casework Operations (Home Office) about the Authorising Officer job role.
+Font: Arial 11pt, space_after=0 (matches real document)
 """
 import io, os
 from docx import Document
 from docx.shared import Pt, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+FONT = "Arial"
 
 def _to_bytes(doc):
     buf = io.BytesIO()
@@ -13,18 +16,24 @@ def _to_bytes(doc):
     buf.seek(0)
     return buf.read()
 
-def _p(doc, text="", bold=False, size=11, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=4):
+def _set_doc_font(doc):
+    doc.styles['Normal'].font.name = FONT
+
+def _p(doc, text="", bold=False, size=11, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=0):
     p = doc.add_paragraph()
     p.alignment = align
     p.paragraph_format.space_after = Pt(space_after)
+    p.paragraph_format.space_before = Pt(0)
     if text:
         r = p.add_run(text)
+        r.font.name = FONT
         r.font.size = Pt(size)
         r.bold = bold
     return p
 
-def generate(fields: dict, uk_fields: dict, output_path):
+def generate(fields: dict, uk_fields: dict, output_path, doc_date: str = ""):
     doc = Document()
+    _set_doc_font(doc)
     for sec in doc.sections:
         sec.top_margin    = Cm(2.5)
         sec.bottom_margin = Cm(2.5)
@@ -44,6 +53,7 @@ def generate(fields: dict, uk_fields: dict, output_path):
     going_hourly  = fields.get("ao_going_rate_hourly", "£30.77 per hour")
     directors     = fields.get("parent_directors", [])
     reporting_to  = fields.get("reporting_to", "")
+    letter_date   = doc_date or fields.get("application_date", "")
 
     # Signatory
     signatory = next((d for d in directors if d.strip().lower() != ao_name.strip().lower()), "")
@@ -57,6 +67,10 @@ def generate(fields: dict, uk_fields: dict, output_path):
     _p(doc, "PO Box 3468", size=11)
     _p(doc, "Sheffield S3 8WA, United Kingdom", size=11)
     _p(doc)
+
+    if letter_date:
+        _p(doc, f"Date: {letter_date}", size=11)
+        _p(doc)
 
     _p(doc, "Dear Sirs:", size=11)
     _p(doc)
@@ -111,7 +125,9 @@ def generate(fields: dict, uk_fields: dict, output_path):
     for c in criteria:
         bp = doc.add_paragraph(style="List Bullet")
         bp.paragraph_format.space_after = Pt(2)
-        bp.add_run(c).font.size = Pt(11)
+        r = bp.add_run(c)
+        r.font.name = FONT
+        r.font.size = Pt(11)
 
     _p(doc)
 
