@@ -89,7 +89,7 @@ def _client() -> Groq:
 def extract(doc_texts: dict) -> dict:
     combined = "\n\n".join(f"=== {k} ===\n{v[:4000]}" for k, v in doc_texts.items())
     resp = _client().chat.completions.create(
-        model="qwen/qwen3.6-27b",
+        model="openai/gpt-oss-20b",
         messages=[
             {"role": "system", "content": EXTRACTION_PROMPT},
             {"role": "user", "content": combined[:12000]},
@@ -101,7 +101,7 @@ def extract(doc_texts: dict) -> dict:
 def extract_remote_staff(doc_texts: dict) -> dict:
     combined = "\n\n".join(f"=== {k} ===\n{v[:5000]}" for k, v in doc_texts.items())
     resp = _client().chat.completions.create(
-        model="qwen/qwen3.6-27b",
+        model="openai/gpt-oss-20b",
         messages=[
             {"role": "system", "content": STAFF_PROMPT},
             {"role": "user", "content": combined[:14000]},
