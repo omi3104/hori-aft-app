@@ -148,7 +148,8 @@ def extract(doc_texts: dict) -> dict:
             {"role": "system", "content": EXTRACTION_PROMPT},
             {"role": "user", "content": combined[:4500]},
         ],
-        temperature=0.1, max_tokens=1400,
+        temperature=0.1, max_tokens=2200,
+        reasoning_effort="low", reasoning_format="hidden",
     )
     return _parse(resp.choices[0].message.content)
 
@@ -160,6 +161,7 @@ def extract_remote_staff(doc_texts: dict) -> dict:
             {"role": "system", "content": STAFF_PROMPT},
             {"role": "user", "content": combined[:9000]},
         ],
-        temperature=0.1, max_tokens=1400,
+        temperature=0.1, max_tokens=2200,
+        reasoning_effort="low", reasoning_format="hidden",
     )
     return _parse(resp.choices[0].message.content)
