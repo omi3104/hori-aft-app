@@ -75,18 +75,60 @@ Extract remote/seconded staff information from the document and return ONLY vali
 }
 """
 
+def _repair_json(raw: str) -> str:
+    """Attempt to close a truncated JSON object by appending missing closing chars."""
+    # Count open braces/brackets to determine what needs closing
+    stack = []
+    in_str = False
+    escape = False
+    for ch in raw:
+        if escape:
+            escape = False
+            continue
+        if ch == '\\' and in_str:
+            escape = True
+            continue
+        if ch == '"':
+            in_str = not in_str
+            continue
+        if in_str:
+            continue
+        if ch in '{[':
+            stack.append('}' if ch == '{' else ']')
+        elif ch in '}]':
+            if stack:
+                stack.pop()
+    # Close any open string, then close remaining structures
+    closing = ''
+    if in_str:
+        closing += '"'
+    closing += ''.join(reversed(stack))
+    return raw.rstrip() + closing
+
 def _parse(raw: str) -> dict:
-    # Strip thinking tags from reasoning models (e.g. qwen3)
+    # Strip thinking tags from reasoning models
     raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL)
     raw = re.sub(r"^```[a-z]*\n?", "", raw.strip())
     raw = re.sub(r"\n?```$", "", raw)
+    # Try as-is
     try:
         return json.loads(raw)
     except json.JSONDecodeError:
-        m = re.search(r"\{.*\}", raw, re.DOTALL)
-        if m:
-            return json.loads(m.group())
-        raise ValueError(f"AI did not return valid JSON:\n{raw[:500]}")
+        pass
+    # Try extracting outermost {...}
+    m = re.search(r"\{.*\}", raw, re.DOTALL)
+    if m:
+        fragment = m.group()
+        try:
+            return json.loads(fragment)
+        except json.JSONDecodeError:
+            # Try to repair truncated JSON
+            repaired = _repair_json(fragment)
+            try:
+                return json.loads(repaired)
+            except json.JSONDecodeError:
+                pass
+    raise ValueError(f"AI did not return valid JSON:\n{raw[:500]}")
 
 def _client() -> Groq:
     key = os.environ.get("GROQ_API_KEY", "")
@@ -102,7 +144,7 @@ def extract(doc_texts: dict) -> dict:
             {"role": "system", "content": EXTRACTION_PROMPT},
             {"role": "user", "content": combined[:12000]},
         ],
-        temperature=0.1, max_tokens=1500,
+        temperature=0.1, max_tokens=4000,
     )
     return _parse(resp.choices[0].message.content)
 

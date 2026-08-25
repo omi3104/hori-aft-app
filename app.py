@@ -21,137 +21,190 @@ st.set_page_config(
 # ── Styles ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    /* ── Global font ── */
-    html, body, [class*="css"] { font-family: 'Inter', 'Segoe UI', sans-serif; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    /* ── Sidebar ── */
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f1f3d 0%, #1a3260 100%);
+    html, body, [class*="css"] {
+        font-family: 'Inter', 'Segoe UI', sans-serif;
     }
-    section[data-testid="stSidebar"] * { color: #e8edf5 !important; }
+
+    /* ── Main background ── */
+    .stApp { background: #f0f2f7; }
+    .main .block-container { padding-top: 1.5rem; }
+
+    /* ── Sidebar — deep charcoal ── */
+    section[data-testid="stSidebar"] {
+        background: #0d0f14 !important;
+        border-right: 1px solid #1e2332;
+    }
+    section[data-testid="stSidebar"] * { color: #c8cdd8 !important; }
     section[data-testid="stSidebar"] .stButton button {
-        background: rgba(255,255,255,0.08) !important;
-        border: 1px solid rgba(255,255,255,0.15) !important;
-        color: #e8edf5 !important;
-        border-radius: 8px !important;
-        transition: all 0.2s;
+        background: #1a1d27 !important;
+        border: 1px solid #2a2f3e !important;
+        color: #c8cdd8 !important;
+        border-radius: 10px !important;
+        font-size: 0.88rem !important;
+        font-weight: 500 !important;
+        transition: all 0.18s ease;
+        text-align: left !important;
     }
     section[data-testid="stSidebar"] .stButton button:hover {
-        background: rgba(255,255,255,0.18) !important;
-    }
-    section[data-testid="stSidebar"] .stButton [kind="primary"] button {
-        background: #3b82f6 !important;
-        border-color: #3b82f6 !important;
+        background: #252a38 !important;
+        border-color: #3d8ef8 !important;
+        color: #ffffff !important;
     }
 
     /* ── Main header ── */
     .main-header {
-        background: linear-gradient(135deg, #0f1f3d 0%, #1e3a8a 60%, #1d4ed8 100%);
-        color: white; padding: 28px 32px;
-        border-radius: 16px; margin-bottom: 28px;
-        box-shadow: 0 8px 32px rgba(15,31,61,0.25);
+        background: #0d0f14;
+        color: white; padding: 26px 32px;
+        border-radius: 16px; margin-bottom: 24px;
+        border: 1px solid #1e2332;
+        position: relative; overflow: hidden;
     }
-    .main-header h1 { margin: 0; font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
-    .main-header p  { margin: 6px 0 0; font-size: 1rem; opacity: 0.75; font-weight: 400; }
+    .main-header::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, #3d8ef8, #7c3aed, #ec4899);
+    }
+    .main-header h1 {
+        margin: 0; font-size: 1.8rem; font-weight: 800;
+        letter-spacing: -0.5px; color: #ffffff;
+    }
+    .main-header p {
+        margin: 6px 0 0; font-size: 0.92rem;
+        color: #6b7280; font-weight: 400;
+    }
 
     /* ── Client cards ── */
     .client-card {
-        border: 1px solid #e2e8f0;
+        border: 1px solid #e5e9f2;
+        border-left: 4px solid #3d8ef8;
         border-radius: 12px;
-        padding: 20px 24px;
-        margin-bottom: 14px;
-        background: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        transition: box-shadow 0.2s;
+        padding: 18px 22px;
+        margin-bottom: 12px;
+        background: #ffffff;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        transition: all 0.18s ease;
     }
-    .client-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+    .client-card:hover {
+        box-shadow: 0 4px 20px rgba(61,142,248,0.12);
+        border-left-color: #7c3aed;
+        transform: translateX(2px);
+    }
 
     /* ── Status badges ── */
     .badge {
         display: inline-block; padding: 3px 10px;
-        border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+        border-radius: 6px; font-size: 0.75rem; font-weight: 700;
+        letter-spacing: 0.02em;
     }
-    .badge-grey   { background: #f1f5f9; color: #64748b; }
-    .badge-orange { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
-    .badge-green  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .badge-grey   { background: #f1f3f9; color: #6b7280; }
+    .badge-orange { background: #fff4e6; color: #d97706; border: 1px solid #fcd34d; }
+    .badge-green  { background: #ecfdf5; color: #059669; border: 1px solid #6ee7b7; }
 
-    /* ── Step progress ── */
+    /* ── Step progress bar ── */
     .step-bar {
-        display: flex; gap: 0; margin-bottom: 28px;
-        border-radius: 12px; overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        display: flex; gap: 4px; margin-bottom: 28px;
     }
     .step-item {
         flex: 1; padding: 14px 10px; text-align: center;
-        font-size: 0.82rem; font-weight: 600;
-        background: #f8fafc; color: #94a3b8;
-        border-right: 1px solid #e2e8f0;
+        font-size: 0.8rem; font-weight: 600;
+        background: #ffffff; color: #9ca3af;
+        border-radius: 10px;
+        border: 1px solid #e5e9f2;
     }
-    .step-item:last-child { border-right: none; }
     .step-item.done {
-        background: #dbeafe; color: #1d4ed8;
+        background: #eff6ff; color: #3d8ef8;
+        border-color: #bfdbfe;
     }
     .step-item.active {
-        background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
-        color: white;
+        background: #0d0f14; color: #ffffff;
+        border-color: #0d0f14;
+        box-shadow: 0 4px 14px rgba(13,15,20,0.25);
     }
-    .step-num {
-        display: block; font-size: 1rem; margin-bottom: 2px;
-    }
+    .step-item.active .step-num { color: #3d8ef8; }
+    .step-num { display: block; font-size: 1rem; margin-bottom: 3px; }
 
     /* ── Info / note boxes ── */
     .step-box {
-        background: #eff6ff; border-left: 4px solid #3b82f6;
-        padding: 13px 18px; border-radius: 8px; margin: 14px 0;
-        font-size: 0.93rem; color: #1e3a8a;
+        background: #f0f7ff; border-left: 4px solid #3d8ef8;
+        padding: 12px 18px; border-radius: 8px; margin: 14px 0;
+        font-size: 0.91rem; color: #1e40af;
     }
     .note-box {
         background: #fffbeb; border-left: 4px solid #f59e0b;
-        padding: 11px 16px; border-radius: 8px; margin: 10px 0;
-        font-size: 0.88rem; color: #92400e;
+        padding: 10px 16px; border-radius: 8px; margin: 10px 0;
+        font-size: 0.87rem; color: #92400e;
     }
 
     /* ── Section headers ── */
     .section-header {
-        font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
-        text-transform: uppercase; color: #64748b;
-        margin: 22px 0 10px; padding-bottom: 6px;
-        border-bottom: 2px solid #e2e8f0;
+        font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;
+        text-transform: uppercase; color: #9ca3af;
+        margin: 24px 0 12px; padding-bottom: 8px;
+        border-bottom: 2px solid #e5e9f2;
     }
 
     /* ── Download button ── */
     div[data-testid="stDownloadButton"] button {
-        background: linear-gradient(135deg, #1e3a8a, #1d4ed8) !important;
-        color: white !important; border-radius: 8px !important;
-        border: none !important; font-weight: 600 !important;
-        box-shadow: 0 2px 8px rgba(29,78,216,0.3) !important;
+        background: #0d0f14 !important;
+        color: white !important; border-radius: 10px !important;
+        border: none !important; font-weight: 700 !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+        transition: all 0.18s ease !important;
+    }
+    div[data-testid="stDownloadButton"] button:hover {
+        background: #3d8ef8 !important;
+        box-shadow: 0 4px 16px rgba(61,142,248,0.4) !important;
     }
 
     /* ── Primary buttons ── */
-    .stButton [kind="primary"] button, button[kind="primary"] {
-        background: linear-gradient(135deg, #1e3a8a, #1d4ed8) !important;
-        border: none !important; border-radius: 8px !important;
+    .stButton button[kind="primary"], .stButton [data-testid*="primary"] button {
+        background: #0d0f14 !important;
+        border: none !important; border-radius: 10px !important;
+        font-weight: 700 !important; color: white !important;
+    }
+
+    /* ── Regular buttons in main area ── */
+    .main .stButton button {
+        border-radius: 10px !important;
         font-weight: 600 !important;
     }
 
     /* ── Inputs ── */
-    .stTextInput input, .stTextArea textarea, .stSelectbox select {
+    .stTextInput input, .stTextArea textarea {
         border-radius: 8px !important;
-        border: 1px solid #e2e8f0 !important;
+        border: 1px solid #d1d9e6 !important;
+        background: #ffffff !important;
+        font-size: 0.9rem !important;
+    }
+    .stTextInput input:focus, .stTextArea textarea:focus {
+        border-color: #3d8ef8 !important;
+        box-shadow: 0 0 0 3px rgba(61,142,248,0.12) !important;
     }
 
-    /* ── Expander ── */
+    /* ── Expanders ── */
     .streamlit-expanderHeader {
-        font-weight: 600 !important; font-size: 0.93rem !important;
+        font-weight: 700 !important; font-size: 0.9rem !important;
         background: #f8fafc !important; border-radius: 8px !important;
+        border: 1px solid #e5e9f2 !important;
     }
 
-    /* ── Dashboard count pill ── */
-    .count-pill {
-        display: inline-block; background: #dbeafe; color: #1d4ed8;
-        border-radius: 20px; padding: 2px 10px;
-        font-size: 0.8rem; font-weight: 700; margin-left: 8px;
+    /* ── Stat cards in sidebar ── */
+    .stat-card {
+        background: #1a1d27; border: 1px solid #2a2f3e;
+        border-radius: 10px; padding: 10px 14px; margin-bottom: 8px;
+        display: flex; justify-content: space-between; align-items: center;
     }
+    .stat-label { font-size: 0.78rem; color: #6b7280 !important; }
+    .stat-value { font-size: 1.1rem; font-weight: 800; color: #ffffff !important; }
+
+    /* ── Divider ── */
+    hr { border-color: #1e2332 !important; margin: 12px 0 !important; }
+
+    /* ── Success / error messages ── */
+    .stSuccess { border-radius: 10px !important; }
+    .stError   { border-radius: 10px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -169,10 +222,12 @@ ch_ok   = bool(os.environ.get("CH_API_KEY"))
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("""
-    <div style="padding: 8px 0 20px;">
-      <div style="font-size:1.5rem; margin-bottom:4px;">🏛️</div>
-      <div style="font-size:1.15rem; font-weight:700; letter-spacing:-0.3px;">Expansion Drafter</div>
-      <div style="font-size:0.78rem; opacity:0.55; margin-top:2px;">UK Sponsor Licence System</div>
+    <div style="padding:16px 4px 20px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+        <span style="font-size:1.4rem;">🏛️</span>
+        <span style="font-size:1.1rem; font-weight:800; color:#ffffff; letter-spacing:-0.3px;">Expansion Drafter</span>
+      </div>
+      <div style="font-size:0.73rem; color:#4b5563; letter-spacing:0.05em; text-transform:uppercase; font-weight:600;">UK Sponsor Licence System</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -181,8 +236,7 @@ with st.sidebar:
     if st.button("📋  Dashboard", use_container_width=True):
         st.session_state.page = "dashboard"
         st.rerun()
-    if st.button("➕  New Client", use_container_width=True,
-                 type="primary" if st.session_state.page == "new_client" else "secondary"):
+    if st.button("➕  New Client", use_container_width=True):
         st.session_state.page = "new_client"
         st.session_state.new_client = {}
         st.rerun()
@@ -193,20 +247,18 @@ with st.sidebar:
     done1 = sum(1 for c in st.session_state.clients if c.get("phase1_done"))
     done2 = sum(1 for c in st.session_state.clients if c.get("phase2_done"))
     st.markdown(f"""
-    <div style="font-size:0.78rem; opacity:0.6; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.06em;">Overview</div>
-    <div style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem;">
-      <div>📁 Total Clients &nbsp;<b>{total}</b></div>
-      <div>🟠 Phase 1 Done &nbsp;<b>{done1}</b></div>
-      <div>🟢 Fully Complete &nbsp;<b>{done2}</b></div>
-    </div>
+    <div style="font-size:0.68rem; font-weight:800; color:#4b5563; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;">Overview</div>
+    <div class="stat-card"><span class="stat-label">Total Clients</span><span class="stat-value">{total}</span></div>
+    <div class="stat-card"><span class="stat-label">Phase 1 Done</span><span class="stat-value" style="color:#f59e0b !important;">{done1}</span></div>
+    <div class="stat-card"><span class="stat-label">Fully Complete</span><span class="stat-value" style="color:#10b981 !important;">{done2}</span></div>
     """, unsafe_allow_html=True)
 
     if not groq_ok or not ch_ok:
         st.divider()
         if not groq_ok:
-            st.warning("⚠️ AI service not configured", icon=None)
+            st.warning("⚠️ AI service not configured")
         if not ch_ok:
-            st.warning("⚠️ Company lookup not configured", icon=None)
+            st.warning("⚠️ Company lookup not configured")
 
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
