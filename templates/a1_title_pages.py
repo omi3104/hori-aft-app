@@ -1,228 +1,158 @@
 """
 ANNEX A.1 — Title Pages
-Exact template: navy header table, client/UK subsidiary details, annex index.
+Two tables: Parent Company details + UK Subsidiary details
 """
-
+import io, os
 from docx import Document
-from docx.shared import Pt, RGBColor, Inches, Cm
+from docx.shared import Pt, Cm, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-import os
 
-import tempfile as _tempfile
+NAVY = RGBColor(0x1B, 0x3A, 0x6B)
 
 def _to_bytes(doc):
-    """Save document to bytes without writing to disk permanently."""
-    import io as _io
-    buf = _io.BytesIO()
+    buf = io.BytesIO()
     doc.save(buf)
     buf.seek(0)
     return buf.read()
 
-
-NAVY = RGBColor(0x1B, 0x3A, 0x6B)
-WHITE = RGBColor(0xFF, 0xFF, 0xFF)
-BLACK = RGBColor(0x00, 0x00, 0x00)
-
-
-def _set_cell_bg(cell, hex_color: str):
-    tc = cell._tc
-    tcPr = tc.get_or_add_tcPr()
-    shd = OxmlElement("w:shd")
-    shd.set(qn("w:val"), "clear")
-    shd.set(qn("w:color"), "auto")
-    shd.set(qn("w:fill"), hex_color)
-    tcPr.append(shd)
-
-
-def _cell_para(cell, text, bold=False, size=11, color=WHITE, align=WD_ALIGN_PARAGRAPH.LEFT):
-    cell.paragraphs[0].clear()
-    p = cell.paragraphs[0]
-    p.alignment = align
-    run = p.add_run(text)
-    run.bold = bold
-    run.font.size = Pt(size)
-    run.font.color.rgb = color
-    return p
-
-
-def _add_navy_heading(doc, text):
+def _p(doc, text="", bold=False, size=11, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=4):
     p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = p.add_run(text)
-    run.bold = True
-    run.font.size = Pt(14)
-    run.font.color.rgb = NAVY
+    p.alignment = align
+    p.paragraph_format.space_after = Pt(space_after)
+    if text:
+        r = p.add_run(text)
+        r.font.size = Pt(size)
+        r.bold = bold
     return p
 
+def _shade_row(row, hex_color="1B3A6B"):
+    for cell in row.cells:
+        tc = cell._tc
+        tcPr = tc.get_or_add_tcPr()
+        shd = OxmlElement("w:shd")
+        shd.set(qn("w:val"), "clear")
+        shd.set(qn("w:color"), "auto")
+        shd.set(qn("w:fill"), hex_color)
+        tcPr.append(shd)
 
-def _add_detail_row(table, label, value):
+def _add_table_row(table, label, value, header=False):
     row = table.add_row()
-    label_cell = row.cells[0]
-    value_cell = row.cells[1]
-    _set_cell_bg(label_cell, "1B3A6B")
-    lp = label_cell.paragraphs[0]
-    lp.clear()
+    lc = row.cells[0]
+    vc = row.cells[1]
+    lp = lc.paragraphs[0]
+    vp = vc.paragraphs[0]
     lr = lp.add_run(label)
-    lr.bold = True
-    lr.font.size = Pt(10)
-    lr.font.color.rgb = WHITE
-    vp = value_cell.paragraphs[0]
-    vp.clear()
     vr = vp.add_run(value)
+    lr.font.size = Pt(10)
     vr.font.size = Pt(10)
-    vr.font.color.rgb = BLACK
+    lr.bold = True
+    vr.bold = True
+    if header:
+        _shade_row(row)
+        lr.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+        vr.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+    return row
 
-
-def generate(fields: dict, uk_fields: dict, output_path: str):
-    """
-    fields: parent company data
-    uk_fields: UK subsidiary data (from Companies House)
-    output_path: full path to save the .docx
-    """
+def generate(fields: dict, uk_fields: dict, output_path):
     doc = Document()
+    for sec in doc.sections:
+        sec.top_margin    = Cm(2.5)
+        sec.bottom_margin = Cm(2.5)
+        sec.left_margin   = Cm(3)
+        sec.right_margin  = Cm(2.5)
 
-    # Page margins
-    for section in doc.sections:
-        section.top_margin = Cm(2)
-        section.bottom_margin = Cm(2)
-        section.left_margin = Cm(2.5)
-        section.right_margin = Cm(2.5)
+    parent_name   = fields.get("parent_name", "")
+    parent_reg    = fields.get("parent_reg_no", "")
+    parent_ref    = fields.get("parent_ref_no", "")
+    parent_date   = fields.get("parent_reg_date", "")
+    parent_addr   = fields.get("parent_address", "")
+    uk_name       = uk_fields.get("company_name", "")
+    uk_num        = uk_fields.get("company_number", "")
+    uk_inc        = uk_fields.get("incorporation_date", "")
+    uk_addr       = uk_fields.get("registered_address", "")
+    uk_sic        = uk_fields.get("sic_codes", [])
+    uk_sic_str    = "\n".join(uk_sic) if uk_sic else ""
+    directors     = fields.get("parent_directors", [])
+    psc           = parent_name  # PSC is the parent company
 
-    # ── PAGE 1: Main Title Page ──────────────────────────────────────────────
-    _add_navy_heading(doc, "ANNEX A")
-    _add_navy_heading(doc, "SPONSOR LICENCE APPLICATION")
-    _add_navy_heading(doc, "UK EXPANSION WORKER ROUTE")
-    _add_navy_heading(doc, "(GLOBAL BUSINESS MOBILITY)")
-    doc.add_paragraph()
+    # ── Intro paragraph ──
+    intro = doc.add_paragraph()
+    intro.paragraph_format.space_after = Pt(8)
+    r1 = intro.add_run("To: Sponsor Casework Operations - UK Visa & Immigration\n")
+    r1.bold = True; r1.font.size = Pt(11)
+    r2 = intro.add_run(
+        "Reference / Application: Sponsor Licence Application – UK Expansion Worker Route "
+        "(Global Business Mobility)\n"
+    )
+    r2.bold = True; r2.font.size = Pt(11)
+    r3 = intro.add_run("We write in reference to the above.\n")
+    r3.bold = True; r3.font.size = Pt(11)
+    r4 = intro.add_run(
+        "Please find the full legal status and registration particulars of both entities, "
+        "including the parent company's overseas incorporation and the UK subsidiary's "
+        "registration with Companies House.\n"
+    )
+    r4.bold = True; r4.font.size = Pt(11)
+    r5 = intro.add_run(
+        "Furthermore, all supporting documentation will be duly attached to verify and "
+        "substantiate the contents of this submission, and to address any inadvertent omission "
+        "that may arise within this document."
+    )
+    r5.bold = True; r5.font.size = Pt(11)
 
-    # Parent company table
-    t = doc.add_table(rows=1, cols=2)
-    t.style = "Table Grid"
-    t.columns[0].width = Inches(2.2)
-    t.columns[1].width = Inches(4.3)
-    hdr = t.rows[0]
-    hdr.cells[0].merge(hdr.cells[1])
-    _set_cell_bg(hdr.cells[0], "1B3A6B")
-    _cell_para(hdr.cells[0], "PARENT COMPANY", bold=True, size=11,
-               align=WD_ALIGN_PARAGRAPH.CENTER)
+    _p(doc)
+
+    # ── Parent Company Table ──
+    t1 = doc.add_table(rows=0, cols=2)
+    t1.style = "Table Grid"
+    t1.columns[0].width = Cm(7)
+    t1.columns[1].width = Cm(9)
+
+    _add_table_row(t1, "PARENT COMPANY", "DETAILS", header=True)
 
     parent_rows = [
-        ("Business / Company Name", fields.get("parent_name", "")),
-        ("Registration Number",     fields.get("parent_reg_no", "")),
-        ("Reference No",            fields.get("parent_ref_no", "")),
-        ("Registered On",           fields.get("parent_reg_date", "")),
-        ("Registered Address",      fields.get("parent_address", "")),
+        ("Business / Company Name", parent_name),
+        ("Registration Number",     parent_reg),
+        ("Reference No",            parent_ref),
+        ("Registered On",           parent_date),
+        ("Business Registered Address", parent_addr),
+        ("Business Trading Address",    parent_addr),
+        ("Business Principal Activity", ""),
+        ("Business Website",        ""),
     ]
-    for label, val in parent_rows:
-        _add_detail_row(t, label, val)
+    for label, value in parent_rows:
+        _add_table_row(t1, label, value)
 
-    doc.add_paragraph()
+    _p(doc)
+    _p(doc, "Thank You,", bold=True, size=11)
+    _p(doc)
+    _p(doc, "For and on behalf of", bold=True, size=11)
+    _p(doc, f"{parent_name} (Pakistan Parent Company) &", bold=True, size=11)
+    _p(doc, f"{uk_name} (UK Subsidiary)", bold=True, size=11)
+    _p(doc)
 
-    # UK subsidiary table
-    t2 = doc.add_table(rows=1, cols=2)
+    # ── UK Subsidiary Table ──
+    t2 = doc.add_table(rows=0, cols=2)
     t2.style = "Table Grid"
-    t2.columns[0].width = Inches(2.2)
-    t2.columns[1].width = Inches(4.3)
-    hdr2 = t2.rows[0]
-    hdr2.cells[0].merge(hdr2.cells[1])
-    _set_cell_bg(hdr2.cells[0], "1B3A6B")
-    _cell_para(hdr2.cells[0], "UK SUBSIDIARY", bold=True, size=11,
-               align=WD_ALIGN_PARAGRAPH.CENTER)
+    t2.columns[0].width = Cm(7)
+    t2.columns[1].width = Cm(9)
+
+    _add_table_row(t2, "UK SUBSIDIARY", "DETAILS", header=True)
 
     uk_rows = [
-        ("Business / Company Name", uk_fields.get("company_name", "")),
-        ("Company Number",          uk_fields.get("company_number", "")),
-        ("Incorporated On",         uk_fields.get("incorporation_date", "")),
-        ("Registered Address",      uk_fields.get("registered_address", "")),
-        ("SIC Codes",               ", ".join(uk_fields.get("sic_codes", []))),
+        ("Business / Company Name",         uk_name),
+        ("Company Number",                  uk_num),
+        ("Incorporated On",                 uk_inc),
+        ("Registered Office Address",       uk_addr),
+        ("Persons with Significant Control (PSC):", psc),
+        ("Correspondence Address",          parent_addr),
+        ("Nature of Business (SIC)",        uk_sic_str),
+        ("Business Trading Address",        ""),
     ]
-    for label, val in uk_rows:
-        _add_detail_row(t2, label, val)
-
-    doc.add_paragraph()
-
-    # AO details
-    ao_name = fields.get("ao_full_name", "")
-    ao_dob  = fields.get("ao_dob", "")
-    ao_pp   = fields.get("ao_passport", "")
-    ao_nat  = fields.get("ao_nationality", "")
-
-    t3 = doc.add_table(rows=1, cols=2)
-    t3.style = "Table Grid"
-    t3.columns[0].width = Inches(2.2)
-    t3.columns[1].width = Inches(4.3)
-    hdr3 = t3.rows[0]
-    hdr3.cells[0].merge(hdr3.cells[1])
-    _set_cell_bg(hdr3.cells[0], "1B3A6B")
-    _cell_para(hdr3.cells[0], "AUTHORISING OFFICER", bold=True, size=11,
-               align=WD_ALIGN_PARAGRAPH.CENTER)
-
-    ao_rows = [
-        ("Full Name",       ao_name),
-        ("Date of Birth",   ao_dob),
-        ("Passport Number", ao_pp),
-        ("Nationality",     ao_nat),
-        ("Job Title",       fields.get("ao_position", "")),
-    ]
-    for label, val in ao_rows:
-        _add_detail_row(t3, label, val)
-
-    # Page break → Annex Index Page
-    doc.add_page_break()
-
-    _add_navy_heading(doc, "ANNEX INDEX")
-    doc.add_paragraph()
-
-    annexes = [
-        ("ANNEX A", "General / Application Information"),
-        ("ANNEX B", "Consultancy Agreement"),
-        ("ANNEX C", "Authorising Officer Documents"),
-        ("ANNEX D", "Business Plan & Financial Projections"),
-        ("ANNEX E", "Employment Contract"),
-        ("ANNEX F", "Supporting Documents"),
-    ]
-
-    t4 = doc.add_table(rows=1, cols=2)
-    t4.style = "Table Grid"
-    t4.columns[0].width = Inches(1.5)
-    t4.columns[1].width = Inches(5.0)
-    hdr4 = t4.rows[0]
-    _set_cell_bg(hdr4.cells[0], "1B3A6B")
-    _set_cell_bg(hdr4.cells[1], "1B3A6B")
-    _cell_para(hdr4.cells[0], "ANNEX", bold=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
-    _cell_para(hdr4.cells[1], "DESCRIPTION", bold=True, size=10, align=WD_ALIGN_PARAGRAPH.CENTER)
-
-    for code, desc in annexes:
-        row = t4.add_row()
-        rp = row.cells[0].paragraphs[0]
-        rp.clear()
-        rr = rp.add_run(code)
-        rr.bold = True
-        rr.font.size = Pt(10)
-        rr.font.color.rgb = NAVY
-        dp = row.cells[1].paragraphs[0]
-        dp.clear()
-        dr = dp.add_run(desc)
-        dr.font.size = Pt(10)
-
-    doc.add_paragraph()
-    doc.add_paragraph()
-
-    # Closing signature block
-    p = doc.add_paragraph()
-    p.add_run("Signed: ___________________________").bold = False
-    doc.add_paragraph()
-    closing = (
-        f"For and on behalf of\n\n"
-        f"{fields.get('parent_name', '')} (Pakistan Parent Company) &\n\n"
-        f"{uk_fields.get('company_name', '')} (UK Subsidiary)"
-    )
-    for line in closing.split("\n"):
-        lp = doc.add_paragraph(line)
-        lp.runs[0].font.size = Pt(10) if lp.runs else None
+    for label, value in uk_rows:
+        _add_table_row(t2, label, value)
 
     if output_path is None:
         return _to_bytes(doc)

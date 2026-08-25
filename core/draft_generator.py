@@ -41,13 +41,13 @@ def generate_phase1_zip(fields: dict, uk_fields: dict, extra: dict = None) -> by
             lambda: b1.generate(fields, uk_fields, output_path=None,
                                 agreement_date=extra.get("agreement_date", "")))
 
-        add("ANNEX C", "ANNEX C.1 - Employment Confirmation Letter.docx",
+        add("ANNEX C", "ANNEX C.1 - Letter from Company HR, confirming Employment.docx",
             lambda: c1.generate(fields, uk_fields, output_path=None,
                                 salary=extra.get("salary", ""),
                                 start_date=extra.get("start_date", "")))
 
         add("ANNEX C",
-            "ANNEX C.2 - Board Resolution - Minutes of Meeting from the Parent Company.docx",
+            "ANNEX C.2 - Board Resolution – Minutes of Meeting from the Parent Company.docx",
             lambda: c2.generate(fields, uk_fields, output_path=None,
                                 meeting_date=extra.get("meeting_date", ""),
                                 directors=fields.get("parent_directors", [])))
@@ -55,11 +55,11 @@ def generate_phase1_zip(fields: dict, uk_fields: dict, extra: dict = None) -> by
         add("ANNEX C", "ANNEX C.3 - AO Details.docx",
             lambda: c3.generate(fields, uk_fields, output_path=None))
 
-        add("ANNEX C", "ANNEX C.8 - AO - Statement of Truth.docx",
+        add("ANNEX C", "ANNEX C.8 - AO – Statement of Truth.docx",
             lambda: c8.generate(fields, uk_fields, output_path=None,
                                 doc_date=extra.get("doc_date", "")))
 
-        add("ANNEX E", "ANNEX E.10 - Employment Contract - Draft Copy.docx",
+        add("ANNEX E", "ANNEX E.12 - Employment Contract – Draft Copy.docx",
             lambda: e10.generate(fields, uk_fields, output_path=None,
                                  salary=extra.get("salary", ""),
                                  start_date=extra.get("start_date", "")))

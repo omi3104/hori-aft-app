@@ -1,150 +1,148 @@
 """
-ANNEX C.1 — Employment Confirmation Letter / Letter from Company HR
+ANNEX C.1 — Letter from Company HR, confirming Employment
+Issued by: Pakistan Parent Company
 """
-
+import io, os
 from docx import Document
 from docx.shared import Pt, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-import os
-
-import tempfile as _tempfile
 
 def _to_bytes(doc):
-    """Save document to bytes without writing to disk permanently."""
-    import io as _io
-    buf = _io.BytesIO()
+    buf = io.BytesIO()
     doc.save(buf)
     buf.seek(0)
     return buf.read()
 
-
-NAVY = RGBColor(0x1B, 0x3A, 0x6B)
-
-
-def _body(doc, text, size=10, bold=False, align=WD_ALIGN_PARAGRAPH.LEFT):
+def _p(doc, text="", bold=False, size=11, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=0):
     p = doc.add_paragraph()
     p.alignment = align
-    r = p.add_run(text)
-    r.font.size = Pt(size)
-    r.bold = bold
+    p.paragraph_format.space_after = Pt(space_after)
+    if text:
+        r = p.add_run(text)
+        r.font.size = Pt(size)
+        r.bold = bold
     return p
 
-
-def generate(fields: dict, uk_fields: dict, output_path: str,
+def generate(fields: dict, uk_fields: dict, output_path,
              salary: str = "", start_date: str = ""):
     doc = Document()
-    for section in doc.sections:
-        section.top_margin = Cm(2)
-        section.bottom_margin = Cm(2)
-        section.left_margin = Cm(2.5)
-        section.right_margin = Cm(2.5)
+    for sec in doc.sections:
+        sec.top_margin    = Cm(2.5)
+        sec.bottom_margin = Cm(2.5)
+        sec.left_margin   = Cm(3)
+        sec.right_margin  = Cm(2.5)
 
     parent_name = fields.get("parent_name", "")
     parent_addr = fields.get("parent_address", "")
-    uk_name     = uk_fields.get("company_name", "")
-    uk_addr     = uk_fields.get("registered_address", "")
     ao_name     = fields.get("ao_full_name", "")
-    ao_dob      = fields.get("ao_dob", "")
     ao_pp       = fields.get("ao_passport", "")
-    ao_nat      = fields.get("ao_nationality", "")
     ao_pos      = fields.get("ao_position", "")
     ao_uk_title = fields.get("ao_uk_title", "Executive Director")
-    soc_code    = fields.get("ao_soc_code", "1111")
-    going_rate  = salary or fields.get("ao_going_rate", "£60,000")
+    directors   = fields.get("parent_directors", [])
+    job_desc    = fields.get("job_description", "")
+    job_duties  = fields.get("job_duties", [])
+    department  = fields.get("department", "")
     app_date    = fields.get("application_date", "")
 
-    # Header
-    _body(doc, "To:", size=10)
-    _body(doc, "Sponsor Casework Operations", size=10)
-    _body(doc, "Vulcan House - Steel", size=10)
-    _body(doc, "PO Box 3468", size=10)
-    _body(doc, "Sheffield S3 8WA, United Kingdom", size=10)
-    doc.add_paragraph()
+    # Signatory — use a director who is not the AO
+    signatory = next((d for d in directors if d.strip().lower() != ao_name.strip().lower()), "")
+    if not signatory and directors:
+        signatory = directors[-1]
 
-    _body(doc,
-        "Dear Sirs:", size=10)
-    doc.add_paragraph()
+    # ── Letterhead ──
+    _p(doc, "Confidential", bold=True, size=11)
+    _p(doc, parent_name, bold=True, size=11)
+    if parent_addr:
+        for line in parent_addr.split(","):
+            _p(doc, line.strip(), size=11)
+    _p(doc)
+    _p(doc, f"Date: {app_date}" if app_date else "Date: ___ / ___ / 20___", size=11)
+    _p(doc)
 
-    _body(doc,
-        "Ref: Details of Identified Authorising Officer for Subsidiary Office – "
-        "UK Expansion Worker Route (Global Business Mobility)", size=10, bold=True)
-    doc.add_paragraph()
+    _p(doc, "To Whom It May Concern", bold=True, size=11)
+    _p(doc)
 
-    _body(doc,
-        f"Applicant (Authorising Officer): {ao_name}, D.O.B: {ao_dob}, "
-        f"Passport Number {ao_pp}, {ao_nat}.", size=10)
-    doc.add_paragraph()
+    _p(doc, f"Subject: Employment Confirmation for Mr. {ao_name}", bold=True, size=11)
+    _p(doc)
 
-    _body(doc,
-        "We write in reference to the above. Please see below the details of the required "
-        "job role for our Authorising Officer.", size=10)
-    doc.add_paragraph()
+    # Paragraph 1 – confirm employment
+    cnic_line = ""  # CNIC not extracted; leave blank for user to fill
+    p1 = doc.add_paragraph()
+    p1.paragraph_format.space_after = Pt(6)
+    r = p1.add_run(
+        f"This is to certify that Mr. {ao_name}, holder of Passport No. {ao_pp}"
+        + (f", has been associated with {parent_name} since its inception"
+           if not start_date else
+           f", has been employed with {parent_name} since {start_date}")
+        + " and continues to be in active employment with the business."
+    )
+    r.font.size = Pt(11)
 
-    _body(doc,
-        "The details are being provided in accordance with the requirements mentioned in "
-        "paragraph 3.10 of Appendix A-Supporting Documents for Sponsor Licence.", size=10)
-    doc.add_paragraph()
+    _p(doc)
 
-    _body(doc, "We are requesting the following job role for our Authorising Officer:", size=10)
-    doc.add_paragraph()
+    # Paragraph 2 – role and company context
+    p2 = doc.add_paragraph()
+    p2.paragraph_format.space_after = Pt(6)
+    role_desc = f"the {ao_pos}" if ao_pos else "a senior executive"
+    r = p2.add_run(
+        f"Mr. {ao_name} currently serves as {role_desc} of the business. "
+        f"The business is duly registered and operates in compliance with all applicable "
+        f"regulatory requirements."
+    )
+    r.font.size = Pt(11)
 
-    job_details = [
-        ("Job Title",   ao_uk_title),
-        ("Job Type",    "Chief Executive and other senior officials"),
-        ("SOC Code",    soc_code),
-        ("Going Rate",  going_rate),
-    ]
-    for label, val in job_details:
-        _body(doc, f"{label}: {val}", size=10)
+    _p(doc)
 
-    doc.add_paragraph()
-    _body(doc, "The Authorising Officer/Worker has been identified considering:", size=10)
+    # Paragraph 3 – responsibilities
+    if job_desc:
+        p3 = doc.add_paragraph()
+        p3.paragraph_format.space_after = Pt(6)
+        r = p3.add_run(
+            f"In his capacity as {ao_pos or ao_uk_title}, Mr. {ao_name} is responsible for "
+            f"{job_desc}"
+        )
+        r.font.size = Pt(11)
+    else:
+        p3 = doc.add_paragraph()
+        p3.paragraph_format.space_after = Pt(6)
+        r = p3.add_run(
+            f"In his capacity as {ao_pos or ao_uk_title}, Mr. {ao_name} is responsible for "
+            f"providing overall strategic leadership and direction to the business. He oversees "
+            f"all business operations, client relationship management, financial performance, "
+            f"regulatory compliance, and ensuring transparent and timely delivery of services."
+        )
+        r.font.size = Pt(11)
 
-    criteria = [
-        "The seniority and important role in the overseas business",
-        "The area of operations in the overseas business",
-        "The knowledge of relevant industry and services",
-        "The educational background, certifications and communication skills",
-        "The proposed operations of the UK entity and relevance of the worker",
-    ]
-    for c in criteria:
-        p = doc.add_paragraph(style="List Bullet")
-        p.add_run(c).font.size = Pt(10)
+    if job_duties:
+        _p(doc, "His key responsibilities include:", size=11)
+        for duty in job_duties:
+            bp = doc.add_paragraph(style="List Bullet")
+            bp.paragraph_format.space_after = Pt(2)
+            bp.add_run(duty).font.size = Pt(11)
 
-    doc.add_paragraph()
-    _body(doc,
-        f"Moreover, Subject to grant of sponsor license and immigration permission to "
-        f"{ao_name}, he will travel to the United Kingdom to undertake the assignment of expansion.",
-        size=10)
-    doc.add_paragraph()
+    _p(doc)
 
-    _body(doc,
-        "We believe that our Sponsor Licence Application fulfils all the requirements and is "
-        "presented in a manner consistent with the standards and expectations relevant to "
-        "establishing a subsidiary office in the United Kingdom.", size=10)
-    doc.add_paragraph()
+    # Paragraph 4 – character
+    p4 = doc.add_paragraph()
+    p4.paragraph_format.space_after = Pt(6)
+    r = p4.add_run(
+        f"Mr. {ao_name} is a dedicated and principled professional who consistently works "
+        f"to the highest standards of integrity and professionalism."
+    )
+    r.font.size = Pt(11)
 
-    _body(doc,
-        "However, should you have any further queries or require clarification or additional "
-        "supporting documentation in relation to our application, please do not hesitate to "
-        "contact us.", size=10)
-    doc.add_paragraph()
-
-    _body(doc, "Thank You,", size=10)
-    doc.add_paragraph()
-    _body(doc, "Signed: ___________________________", size=10)
-    doc.add_paragraph()
-
-    # Signatory — use first non-AO director if available
-    directors = fields.get("parent_directors", [])
-    signatory = next((d for d in directors if d != ao_name), ao_name)
-    _body(doc, f"{signatory}", size=10, bold=True)
-    doc.add_paragraph()
-    _body(doc, "For and on behalf of", size=10)
-    doc.add_paragraph()
-    _body(doc, f"{parent_name} (Pakistan Parent Company) &", size=10)
-    doc.add_paragraph()
-    _body(doc, f"{uk_name} (UK Subsidiary)", size=10)
+    _p(doc)
+    _p(doc, "We hereby confirm the authenticity of this employment as per our company records.", size=11)
+    _p(doc)
+    _p(doc, "Should you require any further information or verification, please do not hesitate to contact us.", size=11)
+    _p(doc)
+    _p(doc, "Yours faithfully,", size=11)
+    _p(doc)
+    _p(doc)
+    if signatory:
+        _p(doc, signatory, bold=True, size=11)
+    _p(doc, "Manager Operations", size=11)
+    _p(doc, parent_name, bold=True, size=11)
 
     if output_path is None:
         return _to_bytes(doc)
