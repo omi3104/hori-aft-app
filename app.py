@@ -1,5 +1,6 @@
 """
-Expansion Drafter — Streamlit Web App
+Hori-aft — Streamlit Web App
+UK Expansion Worker sponsor-licence document generator.
 """
 
 import os, sys, io
@@ -12,7 +13,7 @@ from core import companies_house, document_reader, extractor, draft_generator
 
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Expansion Drafter",
+    page_title="Hori-aft",
     page_icon="🏛️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -225,7 +226,7 @@ with st.sidebar:
     <div style="padding:16px 4px 20px;">
       <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
         <span style="font-size:1.4rem;">🏛️</span>
-        <span style="font-size:1.1rem; font-weight:800; color:#ffffff; letter-spacing:-0.3px;">Expansion Drafter</span>
+        <span style="font-size:1.1rem; font-weight:800; color:#ffffff; letter-spacing:-0.3px;">Hori-aft</span>
       </div>
       <div style="font-size:0.73rem; color:#4b5563; letter-spacing:0.05em; text-transform:uppercase; font-weight:600;">UK Sponsor Licence System</div>
     </div>
@@ -263,7 +264,7 @@ with st.sidebar:
 # ── Header ────────────────────────────────────────────────────────────────────
 st.markdown("""
 <div class="main-header">
-  <h1>🏛️ Expansion Drafter</h1>
+  <h1>🏛️ Hori-aft</h1>
   <p>UK Expansion Worker Sponsor Licence &nbsp;·&nbsp; Automated Document Generator</p>
 </div>
 """, unsafe_allow_html=True)

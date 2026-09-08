@@ -5,3 +5,4 @@ __pycache__/
 *.zip
 *.docx
 .streamlit/secrets.toml
+.claude/
