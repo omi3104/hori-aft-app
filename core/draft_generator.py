@@ -48,14 +48,14 @@ def generate_phase1_zip(fields: dict, uk_fields: dict, extra: dict = None) -> by
             templated("A1", lambda: a1.generate(fields, uk_fields, output_path=None)))
 
         add("ANNEX B", "ANNEX B.1 - Consultancy Agreement.docx",
-            lambda: b1.generate(fields, uk_fields, output_path=None,
-                                agreement_date=extra.get("agreement_date", "")))
+            templated("B1", lambda: b1.generate(fields, uk_fields, output_path=None,
+                                agreement_date=extra.get("agreement_date", ""))))
 
         add("ANNEX C", "ANNEX C.1 - Letter from Company HR, confirming Employment.docx",
-            lambda: c1.generate(fields, uk_fields, output_path=None,
+            templated("C1", lambda: c1.generate(fields, uk_fields, output_path=None,
                                 salary=extra.get("salary", ""),
                                 start_date=extra.get("start_date", ""),
-                                doc_date=extra.get("c1_doc_date", "")))
+                                doc_date=extra.get("c1_doc_date", ""))))
 
         add("ANNEX C",
             "ANNEX C.2 - Board Resolution – Minutes of Meeting from the Parent Company.docx",
@@ -73,9 +73,9 @@ def generate_phase1_zip(fields: dict, uk_fields: dict, extra: dict = None) -> by
                                 doc_date=extra.get("doc_date", ""))))
 
         add("ANNEX E", "ANNEX E.12 - Employment Contract – Draft Copy.docx",
-            lambda: e10.generate(fields, uk_fields, output_path=None,
+            templated("E12", lambda: e10.generate(fields, uk_fields, output_path=None,
                                  salary=extra.get("salary", ""),
-                                 start_date=extra.get("start_date", "")))
+                                 start_date=extra.get("start_date", ""))))
 
     buf.seek(0)
     return buf.read()

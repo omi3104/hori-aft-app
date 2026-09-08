@@ -628,6 +628,15 @@ elif st.session_state.page == "new_client":
             with c1c:
                 extra_salary   = st.text_input("Salary (if different from going rate)", "",
                                                 key="salary")
+            c1d, c1e = st.columns(2)
+            with c1d:
+                extra_c1_since = st.text_input("Associated with the business since", "",
+                                                key="c1_since", placeholder="e.g. March 2021",
+                                                help="C.1: '…continuously associated with … since ___'")
+            with c1e:
+                extra_c1_active = st.text_input("Involved in day-to-day management from", "",
+                                                 key="c1_active", placeholder="e.g. October 2024",
+                                                 help="C.1: '…involved in day to day management and working from ___'")
 
         # ── C.2 Board Resolution ──────────────────────────────────────────────
         with st.expander("📋 C.2 — Board Resolution / Minutes of Meeting", expanded=True):
@@ -705,7 +714,16 @@ elif st.session_state.page == "new_client":
 
         # ── E.12 Employment Contract ───────────────────────────────────────────
         with st.expander("📋 E.12 — Employment Contract", expanded=True):
-            st.caption("Start date and salary come from C.1 fields above.")
+            st.caption("Commencement date and salary come from the C.1 fields above.")
+            e1, e2 = st.columns(2)
+            with e1:
+                extra_e12_date = st.text_input("Contract Date ('made on')", "", key="e12_date",
+                                                placeholder="e.g. 12 May 2026")
+            with e2:
+                fields["uk_workplace"] = st.text_input("UK Place of Work",
+                                                        fields.get("uk_workplace",""),
+                                                        key="e12_workplace",
+                                                        placeholder="Blank → UK registered office")
 
         # ══════════════════════════════════════════════════════════════════════
         nc["fields"] = fields
@@ -718,6 +736,9 @@ elif st.session_state.page == "new_client":
             "attendees":      attendees_list,
             "c1_doc_date":    extra_c1_date,
             "c3_doc_date":    extra_c3_date,
+            "employed_since": extra_c1_since,
+            "active_from":    extra_c1_active,
+            "e12_date":       extra_e12_date,
         }
 
         st.divider()

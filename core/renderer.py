@@ -15,9 +15,12 @@ TPL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 # doc key -> template filename
 TEMPLATES = {
     "A1": "A1_title_pages.docx",
+    "B1": "B1_consultancy_agreement.docx",
+    "C1": "C1_employment_letter.docx",
     "C2": "C2_board_resolution.docx",
     "C3": "C3_ao_details.docx",
     "C8": "C8_statement_of_truth.docx",
+    "E12": "E12_employment_contract.docx",
 }
 
 _MONTHS = {m: i for i, m in enumerate(
@@ -95,9 +98,12 @@ def build_context(key: str, fields: dict, uk_fields: dict, extra: dict) -> dict:
     extra = extra or {}
     return {
         "A1": _ctx_a1,
+        "B1": _ctx_b1,
+        "C1": _ctx_c1,
         "C2": _ctx_c2,
         "C3": _ctx_c3,
         "C8": _ctx_c8,
+        "E12": _ctx_e12,
     }[key](fields, uk_fields, extra)
 
 
@@ -159,6 +165,48 @@ def _ctx_c3(f: dict, uk: dict, x: dict) -> dict:
 def _ctx_c8(f: dict, uk: dict, x: dict) -> dict:
     c = _common(f, uk)
     c["doc_date"] = _doc_date(f, x, "doc_date")
+    return c
+
+
+def _ctx_c1(f: dict, uk: dict, x: dict) -> dict:
+    c = _common(f, uk)
+    c.update({
+        "doc_date": _doc_date(f, x, "c1_doc_date", "doc_date"),
+        "employed_since": _first(x.get("employed_since"), x.get("start_date"),
+                                 "its inception"),
+        "active_from": _first(x.get("active_from"), x.get("start_date")),
+        "job_description": f.get("job_description") or (
+            "he has led all commercial, operational, and financial activities of the "
+            "business, overseeing its principal operations, client relationships, "
+            "financial performance and regulatory compliance."),
+        "signatory_name": _first(f.get("signatory_name"), _signatory(f)),
+        "signatory_title": f.get("signatory_title") or "Director Operations",
+    })
+    return c
+
+
+def _ctx_b1(f: dict, uk: dict, x: dict) -> dict:
+    c = _common(f, uk)
+    c.update({
+        "agreement_date": _first(x.get("agreement_date"), f.get("application_date")),
+        "parent_reg_date": f.get("parent_reg_date", ""),
+        "uk_incorp_date": uk.get("incorporation_date", ""),
+    })
+    return c
+
+
+def _ctx_e12(f: dict, uk: dict, x: dict) -> dict:
+    c = _common(f, uk)
+    c.update({
+        "contract_date": _first(x.get("e12_date"), x.get("start_date"),
+                                f.get("application_date")),
+        "start_date": x.get("start_date", ""),
+        "ao_uk_title": f.get("ao_uk_title") or "Executive Director",
+        "ao_soc_code": f.get("ao_soc_code") or "1111",
+        "salary": _first(x.get("salary"), f.get("ao_going_rate"), "£60,000"),
+        "uk_workplace": _first(f.get("uk_workplace"), x.get("uk_workplace"),
+                               uk.get("registered_address")),
+    })
     return c
 
 
