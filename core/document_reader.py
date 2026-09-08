@@ -45,6 +45,12 @@ def _docx(data: bytes) -> str:
 
 def _image(data: bytes) -> str:
     from PIL import Image
-    import pytesseract
-    img = Image.open(io.BytesIO(data))
-    return pytesseract.image_to_string(img)
+    try:
+        import pytesseract
+        img = Image.open(io.BytesIO(data))
+        return pytesseract.image_to_string(img)
+    except Exception:
+        raise ValueError(
+            "Image OCR isn't available on this deployment (Tesseract not installed). "
+            "Upload a text-based PDF or a Word document instead."
+        )

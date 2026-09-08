@@ -12,7 +12,8 @@ installed on your machine; the desktop icon is just a shortcut to the app URL.
 
 | Stage | Engine |
 |-------|--------|
-| Read uploads (PDF / DOCX / image) | PyMuPDF + Tesseract OCR fallback |
+| Read uploads (PDF / DOCX) | PyMuPDF + python-docx |
+| Image / scanned-PDF OCR | Tesseract *if installed* — not available on Streamlit Community Cloud (see note below) |
 | Extract structured fields | Groq API — `openai/gpt-oss-20b` |
 | UK company lookup | Companies House REST API |
 | SIC code descriptions | bundled `core/sic_lookup.py` table |
@@ -41,8 +42,17 @@ variables, which is how `core/extractor.py` and `core/companies_house.py` read t
 2. Go to https://share.streamlit.io → **Create app** → pick this repo,
    branch `main`, main file `app.py`.
 3. Open **Advanced settings → Secrets**, paste the two keys, deploy.
-4. Streamlit installs `requirements.txt` (Python deps) and `packages.txt`
-   (`tesseract-ocr`) automatically. Every push to `main` redeploys.
+4. Streamlit installs `requirements.txt` automatically. Every push to `main`
+   redeploys.
+
+### OCR note
+
+There is no `packages.txt` / `tesseract-ocr` on the Streamlit Community Cloud
+deploy — their build image currently has an expired Debian apt source that makes
+any system-package install fail. So **image uploads and scanned (image-only) PDFs
+can't be OCR'd** on the hosted app; text-based PDFs and Word docs work normally.
+To restore OCR, run it somewhere you control the OS (a VM / container) and add
+back `packages.txt` containing `tesseract-ocr`.
 
 ## Desktop icon
 
