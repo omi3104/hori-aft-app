@@ -35,13 +35,17 @@ def generate_phase1_zip(fields: dict, uk_fields: dict, extra: dict = None) -> by
                 zf.writestr(f"{annex_folder}/{filename}.ERROR.txt", str(e))
                 return False
 
-        def _a1():
-            if renderer.has_template("A1"):
-                ctx = renderer.build_context("A1", fields, uk_fields, extra)
-                return renderer.render("A1", ctx)
-            return a1.generate(fields, uk_fields, output_path=None)
+        def templated(key, legacy):
+            """Render from the house .docx template if present, else the legacy builder."""
+            def _gen():
+                if renderer.has_template(key):
+                    ctx = renderer.build_context(key, fields, uk_fields, extra)
+                    return renderer.render(key, ctx)
+                return legacy()
+            return _gen
 
-        add("ANNEX A", "ANNEX A.1 - Title Pages.docx", _a1)
+        add("ANNEX A", "ANNEX A.1 - Title Pages.docx",
+            templated("A1", lambda: a1.generate(fields, uk_fields, output_path=None)))
 
         add("ANNEX B", "ANNEX B.1 - Consultancy Agreement.docx",
             lambda: b1.generate(fields, uk_fields, output_path=None,
@@ -55,18 +59,18 @@ def generate_phase1_zip(fields: dict, uk_fields: dict, extra: dict = None) -> by
 
         add("ANNEX C",
             "ANNEX C.2 - Board Resolution – Minutes of Meeting from the Parent Company.docx",
-            lambda: c2.generate(fields, uk_fields, output_path=None,
+            templated("C2", lambda: c2.generate(fields, uk_fields, output_path=None,
                                 meeting_date=extra.get("meeting_date", ""),
                                 directors=fields.get("parent_directors", []),
-                                attendees=extra.get("attendees", [])))
+                                attendees=extra.get("attendees", []))))
 
         add("ANNEX C", "ANNEX C.3 - AO Details.docx",
-            lambda: c3.generate(fields, uk_fields, output_path=None,
-                                doc_date=extra.get("c3_doc_date", "")))
+            templated("C3", lambda: c3.generate(fields, uk_fields, output_path=None,
+                                doc_date=extra.get("c3_doc_date", ""))))
 
         add("ANNEX C", "ANNEX C.8 - AO – Statement of Truth.docx",
-            lambda: c8.generate(fields, uk_fields, output_path=None,
-                                doc_date=extra.get("doc_date", "")))
+            templated("C8", lambda: c8.generate(fields, uk_fields, output_path=None,
+                                doc_date=extra.get("doc_date", ""))))
 
         add("ANNEX E", "ANNEX E.12 - Employment Contract – Draft Copy.docx",
             lambda: e10.generate(fields, uk_fields, output_path=None,

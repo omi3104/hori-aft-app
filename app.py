@@ -532,6 +532,8 @@ elif st.session_state.page == "new_client":
                                                               help="A.1 table. Blank → same as Registered Address")
             fields["parent_website"]   = st.text_input("Company Website", fields.get("parent_website",""),
                                                         help="Used in A.1 Title Pages table")
+            fields["parent_email"]     = st.text_input("Company Email", fields.get("parent_email",""),
+                                                        help="Shown in C.3 letterhead")
 
         c1, c2 = st.columns(2)
         with c1:
@@ -568,6 +570,8 @@ elif st.session_state.page == "new_client":
             fields["ao_nationality"]= st.text_input("Nationality", fields.get("ao_nationality",""))
         with c3:
             fields["ao_position"]   = st.text_input("Position in Parent Company", fields.get("ao_position",""))
+            fields["ao_email"]      = st.text_input("AO Email", fields.get("ao_email",""),
+                                                     help="Shown in C.2 Board Resolution / C.3 letterhead")
 
         # ── Job Description ────────────────────────────────────────────────────
         st.divider()
@@ -673,6 +677,24 @@ elif st.session_state.page == "new_client":
                 fields["ao_going_rate_hourly"] = st.text_input("Hourly Rate",
                                                                  fields.get("ao_going_rate_hourly","£30.77 per hour"),
                                                                  key="c3_hourly")
+            j1, j2, j3 = st.columns(3)
+            with j1:
+                fields["ao_uk_job_type"] = st.text_input("Job Type (SOC group)",
+                                                          fields.get("ao_uk_job_type","Chief executives and senior officials"),
+                                                          key="c3_jobtype")
+            with j2:
+                fields["signatory_name"] = st.text_input("Signatory Name",
+                                                          fields.get("signatory_name",""),
+                                                          key="c3_signame",
+                                                          help="Signs C.3. Blank → a director who isn't the AO")
+            with j3:
+                fields["signatory_title"] = st.text_input("Signatory Title",
+                                                           fields.get("signatory_title","Managing Director"),
+                                                           key="c3_sigtitle")
+            fields["reporting_line"] = st.text_input(
+                "Reporting Line (person + role who runs the parent day-to-day)",
+                fields.get("reporting_line",""), key="c3_reportline",
+                placeholder="e.g. Mrs. Nazish Shoaib, Director Operations")
             extra_c3_date = st.text_input("Date of Letter", "", key="c3_date",
                                            placeholder="e.g. 08 May 2026")
 

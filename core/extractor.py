@@ -20,7 +20,9 @@ You are a document analysis assistant. Extract the following from the document t
   "ao_passport": "",
   "ao_nationality": "",
   "ao_position": "",
+  "ao_email": "",
   "ao_uk_title": "",
+  "ao_uk_job_type": "",
   "ao_soc_code": "",
   "ao_going_rate": "",
   "ao_going_rate_hourly": "",
@@ -30,6 +32,7 @@ You are a document analysis assistant. Extract the following from the document t
   "reporting_to": "",
   "department": "",
   "parent_website": "",
+  "parent_email": "",
   "parent_activity": "",
   "company_type": "",
   "board_attendees": []
@@ -44,7 +47,10 @@ Rules:
 - parent_reg_date: FBR registration date, formatted as DD Month YYYY
 - parent_trading_address: business trading address if it differs from the registered address; else leave ""
 - parent_directors: list of director/owner/partner full names
+- ao_email: the Authorising Officer's email address if shown in any document
+- parent_email: the parent company's general/official email address if shown
 - ao_uk_title: proposed UK job title (default "Executive Director" if unclear)
+- ao_uk_job_type: the SOC occupation group label for the job title (e.g. "Chief executives and senior officials", "Marketing, sales and advertising directors")
 - ao_soc_code: SOC 2020 code (default "1111" if unclear)
 - ao_going_rate: annual salary e.g. "£60,000"
 - ao_going_rate_hourly: e.g. "£30.77 per hour"
