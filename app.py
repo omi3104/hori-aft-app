@@ -516,11 +516,20 @@ elif st.session_state.page == "new_client":
         c1, c2 = st.columns(2)
         with c1:
             fields["parent_name"]     = st.text_input("Parent Company Name", fields.get("parent_name",""))
-            fields["parent_reg_no"]   = st.text_input("Registration Number", fields.get("parent_reg_no",""))
-            fields["parent_ref_no"]   = st.text_input("Reference No.", fields.get("parent_ref_no",""))
+            fields["parent_secp_uin"] = st.text_input("SECP CUIN (Corporate Universal ID)",
+                                                       fields.get("parent_secp_uin",""),
+                                                       help="A.1 table. Blank → falls back to Registration Number")
+            fields["parent_incorp_date"] = st.text_input("Date of Incorporation — SECP (DD Month YYYY)",
+                                                          fields.get("parent_incorp_date",""),
+                                                          help="A.1 table. Blank → falls back to Registered On")
+            fields["parent_reg_no"]   = st.text_input("Registration Number (FBR)", fields.get("parent_reg_no",""))
+            fields["parent_ref_no"]   = st.text_input("Reference No. (FBR)", fields.get("parent_ref_no",""))
         with c2:
             fields["parent_reg_date"] = st.text_input("Registered On (DD Month YYYY)", fields.get("parent_reg_date",""))
             fields["parent_address"]  = st.text_input("Registered Address", fields.get("parent_address",""))
+            fields["parent_trading_address"] = st.text_input("Trading Address (if different)",
+                                                              fields.get("parent_trading_address",""),
+                                                              help="A.1 table. Blank → same as Registered Address")
             fields["parent_website"]   = st.text_input("Company Website", fields.get("parent_website",""),
                                                         help="Used in A.1 Title Pages table")
 

@@ -6,6 +6,7 @@ sys.path.insert(0, ROOT)
 
 import templates.a1_title_pages as a1
 import templates.b1_consultancy_agreement as b1
+from core import renderer
 import templates.c1_employment_letter as c1
 import templates.c2_board_resolution as c2
 import templates.c3_ao_details as c3
@@ -34,8 +35,13 @@ def generate_phase1_zip(fields: dict, uk_fields: dict, extra: dict = None) -> by
                 zf.writestr(f"{annex_folder}/{filename}.ERROR.txt", str(e))
                 return False
 
-        add("ANNEX A", "ANNEX A.1 - Title Pages.docx",
-            lambda: a1.generate(fields, uk_fields, output_path=None))
+        def _a1():
+            if renderer.has_template("A1"):
+                ctx = renderer.build_context("A1", fields, uk_fields, extra)
+                return renderer.render("A1", ctx)
+            return a1.generate(fields, uk_fields, output_path=None)
+
+        add("ANNEX A", "ANNEX A.1 - Title Pages.docx", _a1)
 
         add("ANNEX B", "ANNEX B.1 - Consultancy Agreement.docx",
             lambda: b1.generate(fields, uk_fields, output_path=None,

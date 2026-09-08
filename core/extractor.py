@@ -7,10 +7,13 @@ You are a document analysis assistant. Extract the following from the document t
 
 {
   "parent_name": "",
+  "parent_secp_uin": "",
+  "parent_incorp_date": "",
   "parent_reg_no": "",
   "parent_ref_no": "",
   "parent_reg_date": "",
   "parent_address": "",
+  "parent_trading_address": "",
   "parent_directors": [],
   "ao_full_name": "",
   "ao_dob": "",
@@ -34,9 +37,12 @@ You are a document analysis assistant. Extract the following from the document t
 
 Rules:
 - parent_name: full business/company name (e.g. M/S AL-HABIB ENGINEERING & CONTRACTOR)
-- parent_reg_no: SECP/CTRN registration number
-- parent_ref_no: reference number if shown
-- parent_reg_date: formatted as DD Month YYYY
+- parent_secp_uin: SECP Corporate Universal Identification No. (CUIN) — 7-digit number, if the company is SECP-registered
+- parent_incorp_date: SECP date of incorporation, formatted as DD Month YYYY (may differ from FBR registration date)
+- parent_reg_no: FBR/SECP/CTRN registration number
+- parent_ref_no: FBR reference number if shown
+- parent_reg_date: FBR registration date, formatted as DD Month YYYY
+- parent_trading_address: business trading address if it differs from the registered address; else leave ""
 - parent_directors: list of director/owner/partner full names
 - ao_uk_title: proposed UK job title (default "Executive Director" if unclear)
 - ao_soc_code: SOC 2020 code (default "1111" if unclear)
